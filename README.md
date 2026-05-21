@@ -122,7 +122,29 @@ python app.py
 
 ## 📸 Screenshots
 
-(Add project screenshots here later)
+### 🏠 Home Page
+![Home Page](screenshots/home.png)
+
+---
+
+### 🔐 Login Page
+![Login Page](screenshots/login.png)
+
+---
+
+### 🌦️ Weather Forecast
+![Weather](screenshots/weather.png)
+![Weather](screenshots/weather2.png)
+![Weather](screenshots/weather3.png)
+---
+
+### 🌱 Crop Recommendation
+![Crop Recommendation](screenshots/disease2.png)
+
+---
+
+### 🦠 Disease Detection
+![Disease Detection](screenshots/disease.png)
 
 ---
 
