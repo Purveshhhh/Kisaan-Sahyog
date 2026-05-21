@@ -1,0 +1,354 @@
+{% extends "base.html" %}
+{% block title %}Mandi Rates{% endblock %}
+
+{% block content %}
+
+<div class="page-hero">
+  <div class="page-hero-content">
+    <span class="page-hero-icon">📊</span>
+    <h1 data-en="Mandi Rates" data-hi="मंडी भाव">
+      {% if session.get('lang')=='hi' %}मंडी भाव{% else %}Mandi Rates{% endif %}
+    </h1>
+    <p data-en="Real-time market prices from mandis across India"
+       data-hi="भारत की मंडियों के रियल-टाइम बाजार भाव">
+      {% if session.get('lang')=='hi' %}भारत की मंडियों के रियल-टाइम बाजार भाव
+      {% else %}Real-time market prices from mandis across India{% endif %}
+    </p>
+  </div>
+</div>
+
+<div class="section" style="max-width:1100px;">
+
+  <!-- Filter Card -->
+  <div class="card" style="margin-bottom:2rem;">
+    <div class="card-header">
+      🔍 {% if session.get('lang')=='hi' %}फ़िल्टर करें{% else %}Search & Filter{% endif %}
+    </div>
+    <div class="card-body">
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px;">
+
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label">
+            {% if session.get('lang')=='hi' %}राज्य{% else %}State{% endif %}
+          </label>
+          <select id="stateSelect" class="form-control">
+            {% set states = [
+              'Andhra Pradesh','Arunachal Pradesh','Assam','Bihar','Chhattisgarh',
+              'Goa','Gujarat','Haryana','Himachal Pradesh','Jharkhand','Karnataka',
+              'Kerala','Madhya Pradesh','Maharashtra','Manipur','Meghalaya','Mizoram',
+              'Nagaland','Odisha','Punjab','Rajasthan','Sikkim','Tamil Nadu',
+              'Telangana','Tripura','Uttar Pradesh','Uttarakhand','West Bengal'
+            ] %}
+            {% for s in states %}
+            <option value="{{ s }}"
+              {{ 'selected' if s == 'Madhya Pradesh' }}>{{ s }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label">
+            {% if session.get('lang')=='hi' %}फसल / वस्तु{% else %}Commodity{% endif %}
+          </label>
+          <input type="text" id="commodityInput" class="form-control"
+                 placeholder="{% if session.get('lang')=='hi' %}जैसे Wheat, Rice, Onion{% else %}e.g. Wheat, Rice, Onion{% endif %}"/>
+        </div>
+
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label">
+            {% if session.get('lang')=='hi' %}परिणाम संख्या{% else %}Results Limit{% endif %}
+          </label>
+          <select id="limitSelect" class="form-control">
+            <option value="20">20</option>
+            <option value="50" selected>50</option>
+            <option value="100">100</option>
+          </select>
+        </div>
+
+        <div class="form-group" style="margin-bottom:0; display:flex; align-items:flex-end;">
+          <button onclick="fetchMandi()" class="btn-green" style="padding:12px 24px;">
+            🔍 {% if session.get('lang')=='hi' %}भाव देखें{% else %}Get Rates{% endif %}
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Quick commodity buttons -->
+      <div style="margin-top:1.2rem;">
+        <p style="font-size:0.8rem; font-weight:700; color:var(--text-light); margin-bottom:8px;">
+          {% if session.get('lang')=='hi' %}जल्दी खोजें:{% else %}Quick Search:{% endif %}
+        </p>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          {% for crop in ['Wheat','Rice','Onion','Potato','Tomato','Soyabean',
+                          'Cotton','Maize','Mustard','Garlic','Gram','Bajra'] %}
+          <button onclick="quickCommodity('{{crop}}')"
+                  style="padding:5px 14px; background:var(--green-pale);
+                         color:var(--green-dark); border:1px solid var(--green-light);
+                         border-radius:20px; font-size:0.8rem; font-weight:700;
+                         cursor:pointer; transition:all 0.2s;"
+                  onmouseover="this.style.background='var(--green-light)'"
+                  onmouseout="this.style.background='var(--green-pale)'">
+            {{crop}}
+          </button>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading-spinner" id="mandiLoading">
+    <div class="spinner"></div>
+    <p style="color:var(--text-light);">
+      {% if session.get('lang')=='hi' %}मंडी डेटा लोड हो रहा है...
+      {% else %}Fetching mandi rates...{% endif %}
+    </p>
+  </div>
+
+  <!-- Error -->
+  <div id="mandiError" style="display:none; background:#fff3cd;
+       border:1.5px solid #ffc107; border-radius:var(--radius-md);
+       padding:1.2rem; margin-bottom:1rem;">
+  </div>
+
+  <!-- Summary Bar -->
+  <div id="mandiSummary" style="display:none; margin-bottom:1.5rem;">
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:16px;">
+      <div style="background:linear-gradient(135deg,var(--green-dark),var(--green-mid));
+                  border-radius:var(--radius-md); padding:1.2rem; color:white; text-align:center;">
+        <div style="font-size:1.8rem; font-weight:800;" id="totalRecords">0</div>
+        <div style="font-size:0.8rem; opacity:0.8;">
+          {% if session.get('lang')=='hi' %}कुल रिकॉर्ड{% else %}Total Records{% endif %}
+        </div>
+      </div>
+      <div style="background:linear-gradient(135deg,#f39c12,#e67e22);
+                  border-radius:var(--radius-md); padding:1.2rem; color:white; text-align:center;">
+        <div style="font-size:1.8rem; font-weight:800;" id="avgPrice">₹0</div>
+        <div style="font-size:0.8rem; opacity:0.8;">
+          {% if session.get('lang')=='hi' %}औसत मोडल भाव{% else %}Avg Modal Price{% endif %}
+        </div>
+      </div>
+      <div style="background:linear-gradient(135deg,#27ae60,#1e8449);
+                  border-radius:var(--radius-md); padding:1.2rem; color:white; text-align:center;">
+        <div style="font-size:1.8rem; font-weight:800;" id="minPrice">₹0</div>
+        <div style="font-size:0.8rem; opacity:0.8;">
+          {% if session.get('lang')=='hi' %}न्यूनतम भाव{% else %}Min Price{% endif %}
+        </div>
+      </div>
+      <div style="background:linear-gradient(135deg,#e74c3c,#c0392b);
+                  border-radius:var(--radius-md); padding:1.2rem; color:white; text-align:center;">
+        <div style="font-size:1.8rem; font-weight:800;" id="maxPrice">₹0</div>
+        <div style="font-size:0.8rem; opacity:0.8;">
+          {% if session.get('lang')=='hi' %}अधिकतम भाव{% else %}Max Price{% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Results Table -->
+  <div id="mandiResult" style="display:none;">
+    <div class="card">
+      <div class="card-header" style="justify-content:space-between;">
+        <span>📋
+          {% if session.get('lang')=='hi' %}मंडी भाव तालिका{% else %}Mandi Price Table{% endif %}
+        </span>
+        <input type="text" id="tableSearch" placeholder="🔍 Search..."
+               oninput="filterTable()"
+               style="padding:6px 12px; border-radius:20px; border:1px solid rgba(255,255,255,0.3);
+                      background:rgba(255,255,255,0.15); color:white; font-size:0.8rem;
+                      outline:none; width:180px;"
+               placeholder="{% if session.get('lang')=='hi' %}तालिका में खोजें...{% else %}Filter table...{% endif %}"/>
+      </div>
+      <div style="overflow-x:auto;">
+        <table style="width:100%; border-collapse:collapse;" id="mandiTable">
+          <thead>
+            <tr style="background:linear-gradient(135deg,#f0faf4,#e8f5e9);">
+              <th style="padding:12px 16px; text-align:left; font-size:0.82rem;
+                         color:var(--green-dark); font-weight:800; border-bottom:2px solid var(--green-pale);">
+                {% if session.get('lang')=='hi' %}मंडी{% else %}Market{% endif %}
+              </th>
+              <th style="padding:12px 16px; text-align:left; font-size:0.82rem;
+                         color:var(--green-dark); font-weight:800; border-bottom:2px solid var(--green-pale);">
+                {% if session.get('lang')=='hi' %}जिला{% else %}District{% endif %}
+              </th>
+              <th style="padding:12px 16px; text-align:left; font-size:0.82rem;
+                         color:var(--green-dark); font-weight:800; border-bottom:2px solid var(--green-pale);">
+                {% if session.get('lang')=='hi' %}फसल{% else %}Commodity{% endif %}
+              </th>
+              <th style="padding:12px 16px; text-align:left; font-size:0.82rem;
+                         color:var(--green-dark); font-weight:800; border-bottom:2px solid var(--green-pale);">
+                {% if session.get('lang')=='hi' %}किस्म{% else %}Variety{% endif %}
+              </th>
+              <th style="padding:12px 16px; text-align:center; font-size:0.82rem;
+                         color:var(--green-dark); font-weight:800; border-bottom:2px solid var(--green-pale);">
+                {% if session.get('lang')=='hi' %}न्यूनतम ₹{% else %}Min ₹{% endif %}
+              </th>
+              <th style="padding:12px 16px; text-align:center; font-size:0.82rem;
+                         color:var(--green-dark); font-weight:800; border-bottom:2px solid var(--green-pale);">
+                {% if session.get('lang')=='hi' %}अधिकतम ₹{% else %}Max ₹{% endif %}
+              </th>
+              <th style="padding:12px 16px; text-align:center; font-size:0.82rem;
+                         color:var(--green-dark); font-weight:800; border-bottom:2px solid var(--green-pale);">
+                {% if session.get('lang')=='hi' %}मोडल ₹{% else %}Modal ₹{% endif %}
+              </th>
+              <th style="padding:12px 16px; text-align:center; font-size:0.82rem;
+                         color:var(--green-dark); font-weight:800; border-bottom:2px solid var(--green-pale);">
+                {% if session.get('lang')=='hi' %}तारीख{% else %}Date{% endif %}
+              </th>
+            </tr>
+          </thead>
+          <tbody id="mandiTableBody">
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const isHindi = {{ 'true' if session.get('lang')=='hi' else 'false' }};
+let allRecords = [];
+
+function quickCommodity(name) {
+  document.getElementById('commodityInput').value = name;
+  fetchMandi();
+}
+
+function filterTable() {
+  const q = document.getElementById('tableSearch').value.toLowerCase();
+  const rows = document.getElementById('mandiTableBody').querySelectorAll('tr');
+  rows.forEach(row => {
+    row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+}
+
+async function fetchMandi() {
+  const state     = document.getElementById('stateSelect').value;
+  const commodity = document.getElementById('commodityInput').value.trim();
+  const limit     = document.getElementById('limitSelect').value;
+
+  document.getElementById('mandiLoading').classList.add('show');
+  document.getElementById('mandiResult').style.display  = 'none';
+  document.getElementById('mandiSummary').style.display = 'none';
+  document.getElementById('mandiError').style.display   = 'none';
+
+  try {
+    let url = `/api/mandi?state=${encodeURIComponent(state)}&limit=${limit}`;
+    if (commodity) url += `&commodity=${encodeURIComponent(commodity)}`;
+
+    const controller = new AbortController();
+const timeoutId  = setTimeout(() => controller.abort(), 35000);
+const resp = await fetch(url, { signal: controller.signal });
+clearTimeout(timeoutId);
+    const data = await resp.json();
+
+    document.getElementById('mandiLoading').classList.remove('show');
+
+    if (data.error) {
+      document.getElementById('mandiError').style.display = 'block';
+      document.getElementById('mandiError').innerHTML =
+        `<p style="color:#856404; font-weight:600;">⚠️ ${data.error}</p>`;
+      return;
+    }
+
+    allRecords = data.records;
+    renderTable(allRecords);
+    renderSummary(allRecords, data.total);
+
+    document.getElementById('mandiResult').style.display  = 'block';
+    document.getElementById('mandiSummary').style.display = 'block';
+
+  } catch(e) {
+    document.getElementById('mandiLoading').classList.remove('show');
+    document.getElementById('mandiError').style.display = 'block';
+    document.getElementById('mandiError').innerHTML =
+      `<p style="color:#856404;">❌ ${isHindi ? 'कनेक्शन त्रुटि' : 'Connection error. Please try again.'}</p>`;
+  }
+}
+
+function renderSummary(records, total) {
+  const prices = records
+    .map(r => parseFloat(r.modal_price))
+    .filter(p => !isNaN(p) && p > 0);
+
+  const avg = prices.length
+    ? Math.round(prices.reduce((a,b) => a+b, 0) / prices.length)
+    : 0;
+  const min = prices.length ? Math.min(...prices) : 0;
+  const max = prices.length ? Math.max(...prices) : 0;
+
+  document.getElementById('totalRecords').textContent = total  || records.length;
+  document.getElementById('avgPrice').textContent     = `₹${avg}`;
+  document.getElementById('minPrice').textContent     = `₹${min}`;
+  document.getElementById('maxPrice').textContent     = `₹${max}`;
+}
+
+function renderTable(records) {
+  const tbody = document.getElementById('mandiTableBody');
+  tbody.innerHTML = '';
+
+  if (!records.length) {
+    tbody.innerHTML = `
+      <tr><td colspan="8" style="text-align:center; padding:3rem; color:var(--text-light);">
+        ${isHindi ? 'कोई डेटा नहीं मिला। फ़िल्टर बदलें।' : 'No records found. Try different filters.'}
+      </td></tr>`;
+    return;
+  }
+
+  records.forEach((r, i) => {
+    const modal = parseFloat(r.modal_price) || 0;
+    const max   = parseFloat(r.max_price)   || 0;
+    const min   = parseFloat(r.min_price)   || 0;
+
+    // Color code modal price
+    let priceColor = '#27ae60';
+    if (modal > 5000)      priceColor = '#e74c3c';
+    else if (modal > 2000) priceColor = '#f39c12';
+
+    tbody.innerHTML += `
+      <tr style="border-bottom:1px solid #f0f0f0;
+                 background:${i % 2 === 0 ? 'white' : '#fafffe'};
+                 transition:background 0.2s;"
+          onmouseover="this.style.background='#f0faf4'"
+          onmouseout="this.style.background='${i % 2 === 0 ? 'white' : '#fafffe'}'">
+        <td style="padding:10px 16px; font-size:0.85rem; font-weight:700;
+                   color:var(--green-dark);">
+          🏪 ${r.market || '-'}
+        </td>
+        <td style="padding:10px 16px; font-size:0.85rem; color:var(--text-mid);">
+          ${r.district || '-'}
+        </td>
+        <td style="padding:10px 16px; font-size:0.85rem; font-weight:700;">
+          <span style="background:var(--green-pale); color:var(--green-dark);
+                       padding:3px 10px; border-radius:12px; font-size:0.78rem;">
+            ${r.commodity || '-'}
+          </span>
+        </td>
+        <td style="padding:10px 16px; font-size:0.82rem; color:var(--text-light);">
+          ${r.variety || '-'}
+        </td>
+        <td style="padding:10px 16px; text-align:center; font-size:0.85rem; color:#3498db; font-weight:600;">
+          ₹${min}
+        </td>
+        <td style="padding:10px 16px; text-align:center; font-size:0.85rem; color:#e74c3c; font-weight:600;">
+          ₹${max}
+        </td>
+        <td style="padding:10px 16px; text-align:center;">
+          <span style="font-size:0.95rem; font-weight:800; color:${priceColor};">
+            ₹${modal}
+          </span>
+        </td>
+        <td style="padding:10px 16px; text-align:center; font-size:0.8rem; color:var(--text-light);">
+          📅 ${r.date || '-'}
+        </td>
+      </tr>`;
+  });
+}
+
+// Load on page start
+window.onload = () => fetchMandi();
+</script>
+{% endblock %}

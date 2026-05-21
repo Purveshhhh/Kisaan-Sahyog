@@ -1,0 +1,448 @@
+{% extends "base.html" %}
+{% block title %}Disease Detection{% endblock %}
+
+{% block content %}
+
+<div class="page-hero">
+  <div class="page-hero-content">
+    <span class="page-hero-icon">🌿</span>
+    <h1>{% if session.get('lang')=='hi' %}फसल रोग पहचान{% else %}Crop Disease Detection{% endif %}</h1>
+    <p>{% if session.get('lang')=='hi' %}पत्ती की फोटो अपलोड करें — AI रोग पहचानेगा और उपचार बताएगा
+       {% else %}Upload a leaf photo — AI identifies disease and suggests treatment{% endif %}</p>
+  </div>
+</div>
+
+<div class="section" style="max-width:1000px;">
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:2rem;">
+
+    <!-- Upload Section -->
+    <div>
+      <div class="card">
+        <div class="card-header">
+          📸 {% if session.get('lang')=='hi' %}पत्ती की फोटो अपलोड करें{% else %}Upload Leaf Photo{% endif %}
+        </div>
+        <div class="card-body">
+
+          <!-- Drop Zone -->
+          <div id="dropZone"
+               onclick="document.getElementById('leafImage').click()"
+               ondragover="event.preventDefault(); this.style.borderColor='var(--green-mid)'"
+               ondragleave="this.style.borderColor='var(--green-pale)'"
+               ondrop="handleDrop(event)"
+               style="border:2.5px dashed var(--green-pale); border-radius:var(--radius-md);
+                      padding:2.5rem; text-align:center; cursor:pointer;
+                      transition:all 0.3s; background:#fafffe; margin-bottom:1.5rem;">
+            <div id="dropContent">
+              <div style="font-size:3rem; margin-bottom:1rem;">🍃</div>
+              <p style="font-weight:700; color:var(--green-dark); margin-bottom:6px;">
+                {% if session.get('lang')=='hi' %}यहाँ फोटो खींचें या क्लिक करें
+                {% else %}Drag & drop or click to upload{% endif %}
+              </p>
+              <p style="font-size:0.82rem; color:var(--text-light);">
+                JPG, PNG, WEBP • Max 10MB
+              </p>
+            </div>
+            <img id="previewImg" style="display:none; max-width:100%;
+                 border-radius:var(--radius-sm); max-height:250px; object-fit:cover;"/>
+          </div>
+
+          <input type="file" id="leafImage" accept="image/*"
+                 style="display:none;" onchange="previewImage(event)"/>
+
+          <!-- Camera Button for Mobile -->
+          <div style="display:flex; gap:10px; margin-bottom:1.5rem;">
+            <button onclick="document.getElementById('leafImage').click()"
+                    class="btn-green" style="flex:1; padding:12px;">
+              📁 {% if session.get('lang')=='hi' %}फ़ाइल चुनें{% else %}Choose File{% endif %}
+            </button>
+            <button onclick="openCamera()"
+                    style="flex:1; padding:12px; background:var(--sky);
+                           color:white; border:none; border-radius:var(--radius-md);
+                           font-weight:700; cursor:pointer; font-size:0.9rem;">
+              📷 {% if session.get('lang')=='hi' %}कैमरा{% else %}Camera{% endif %}
+            </button>
+          </div>
+
+          <!-- Analyze Button -->
+          <button onclick="analyzeDisease()" id="analyzeBtn"
+                  class="btn-green" style="font-size:1rem; padding:14px;" disabled>
+            🔬 {% if session.get('lang')=='hi' %}रोग पहचानें{% else %}Detect Disease{% endif %}
+          </button>
+
+          <!-- Tips -->
+          <div style="margin-top:1.5rem; background:#f0faf4; border-radius:var(--radius-sm);
+                      padding:1rem; border-left:3px solid var(--green-light);">
+            <p style="font-size:0.82rem; font-weight:700; color:var(--green-dark); margin-bottom:8px;">
+              💡 {% if session.get('lang')=='hi' %}अच्छे परिणाम के लिए:{% else %}For best results:{% endif %}
+            </p>
+            <ul style="font-size:0.8rem; color:var(--text-mid); padding-left:1.2rem; line-height:1.8;">
+              <li>{% if session.get('lang')=='hi' %}पत्ती का स्पष्ट क्लोज-अप फोटो लें{% else %}Take a clear close-up of the affected leaf{% endif %}</li>
+              <li>{% if session.get('lang')=='hi' %}अच्छी रोशनी में फोटो लें{% else %}Photograph in good lighting{% endif %}</li>
+              <li>{% if session.get('lang')=='hi' %}रोगग्रस्त हिस्सा फोटो में दिखाएं{% else %}Show the diseased part clearly{% endif %}</li>
+              <li>{% if session.get('lang')=='hi' %}धुंधली फोटो न लें{% else %}Avoid blurry images{% endif %}</li>
+            </ul>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Results Section -->
+    <div>
+
+      <!-- Loading -->
+      <div class="loading-spinner" id="diseaseLoading">
+        <div class="spinner"></div>
+        <p style="color:var(--text-light);">
+          {% if session.get('lang')=='hi' %}AI विश्लेषण कर रहा है...{% else %}AI is analyzing the leaf...{% endif %}
+        </p>
+      </div>
+
+      <!-- Error -->
+      <div id="diseaseError" style="display:none; background:#fff3cd;
+           border:1.5px solid #ffc107; border-radius:var(--radius-md); padding:1.2rem;">
+      </div>
+
+      <!-- Default -->
+      <div id="diseaseDefault"
+           style="background:white; border-radius:var(--radius-lg);
+                  border:2px dashed var(--green-pale); padding:3rem;
+                  text-align:center; color:var(--text-light);">
+        <div style="font-size:3rem; margin-bottom:1rem;">🔬</div>
+        <p style="font-weight:700; font-size:1rem; color:var(--green-dark);">
+          {% if session.get('lang')=='hi' %}पत्ती की फोटो अपलोड करें{% else %}Upload a leaf photo to get started{% endif %}
+        </p>
+        <p style="font-size:0.85rem; margin-top:8px;">
+          {% if session.get('lang')=='hi' %}AI 22+ रोगों की पहचान कर सकता है{% else %}AI can identify 22+ plant diseases{% endif %}
+        </p>
+      </div>
+
+      <!-- Results -->
+      <div id="diseaseResult" style="display:none;">
+
+        <!-- Plant ID -->
+        <div id="plantIdCard" style="margin-bottom:1rem;"></div>
+
+        <!-- Health Status -->
+        <div id="healthCard" style="margin-bottom:1rem;"></div>
+
+        <!-- Diseases -->
+        <div id="diseasesCard"></div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Camera Modal -->
+<div id="cameraModal" style="display:none; position:fixed; inset:0;
+     background:rgba(0,0,0,0.85); z-index:2000; align-items:center;
+     justify-content:center; flex-direction:column;">
+  <video id="cameraStream" autoplay playsinline
+         style="max-width:90vw; max-height:70vh; border-radius:12px;"></video>
+  <div style="display:flex; gap:16px; margin-top:1.5rem;">
+    <button onclick="capturePhoto()"
+            style="padding:14px 28px; background:var(--green-mid); color:white;
+                   border:none; border-radius:24px; font-size:1rem; font-weight:700; cursor:pointer;">
+      📸 {% if session.get('lang')=='hi' %}फोटो खींचें{% else %}Capture{% endif %}
+    </button>
+    <button onclick="closeCamera()"
+            style="padding:14px 28px; background:#e74c3c; color:white;
+                   border:none; border-radius:24px; font-size:1rem; font-weight:700; cursor:pointer;">
+      ✕ {% if session.get('lang')=='hi' %}बंद करें{% else %}Close{% endif %}
+    </button>
+  </div>
+  <canvas id="captureCanvas" style="display:none;"></canvas>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const isHindi = {{ 'true' if session.get('lang')=='hi' else 'false' }};
+let stream = null;
+let selectedFile = null;
+
+// ── Image Preview ─────────────────────────────────
+function previewImage(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  loadPreview(file);
+}
+
+function loadPreview(file) {
+  selectedFile = file;
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('dropContent').style.display = 'none';
+    const img = document.getElementById('previewImg');
+    img.src   = e.target.result;
+    img.style.display = 'block';
+    document.getElementById('analyzeBtn').disabled = false;
+    document.getElementById('dropZone').style.borderColor = 'var(--green-mid)';
+  };
+  reader.readAsDataURL(file);
+}
+
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('dropZone').style.borderColor = 'var(--green-pale)';
+  const file = e.dataTransfer.files[0];
+  if (file && file.type.startsWith('image/')) loadPreview(file);
+}
+
+// ── Camera ────────────────────────────────────────
+async function openCamera() {
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'environment' }
+    });
+    document.getElementById('cameraStream').srcObject = stream;
+    document.getElementById('cameraModal').style.display = 'flex';
+  } catch(e) {
+    alert(isHindi ? 'कैमरा उपलब्ध नहीं है।' : 'Camera not available.');
+  }
+}
+
+function capturePhoto() {
+  const video  = document.getElementById('cameraStream');
+  const canvas = document.getElementById('captureCanvas');
+  canvas.width  = video.videoWidth;
+  canvas.height = video.videoHeight;
+  canvas.getContext('2d').drawImage(video, 0, 0);
+  canvas.toBlob(blob => {
+    const file = new File([blob], 'capture.jpg', { type: 'image/jpeg' });
+    loadPreview(file);
+    closeCamera();
+  }, 'image/jpeg', 0.9);
+}
+
+function closeCamera() {
+  if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+  document.getElementById('cameraModal').style.display = 'none';
+}
+
+// ── Analyze ───────────────────────────────────────
+async function analyzeDisease() {
+  if (!selectedFile) {
+    alert(isHindi ? 'पहले फोटो चुनें।' : 'Please select an image first.');
+    return;
+  }
+
+  document.getElementById('diseaseLoading').classList.add('show');
+  document.getElementById('diseaseResult').style.display  = 'none';
+  document.getElementById('diseaseDefault').style.display = 'none';
+  document.getElementById('diseaseError').style.display   = 'none';
+  document.getElementById('analyzeBtn').disabled = true;
+
+  try {
+    const formData = new FormData();
+    formData.append('image', selectedFile);
+
+    const resp = await fetch('/api/disease', {
+      method: 'POST',
+      body  : formData,
+    });
+
+    const data = await resp.json();
+    document.getElementById('diseaseLoading').classList.remove('show');
+    document.getElementById('analyzeBtn').disabled = false;
+
+    if (data.error) {
+      document.getElementById('diseaseError').style.display = 'block';
+      document.getElementById('diseaseError').innerHTML =
+        `<p style="color:#856404; font-weight:600;">⚠️ ${data.error}</p>`;
+      return;
+    }
+
+    renderResults(data);
+    document.getElementById('diseaseResult').style.display = 'block';
+
+  } catch(e) {
+    document.getElementById('diseaseLoading').classList.remove('show');
+    document.getElementById('analyzeBtn').disabled = false;
+    document.getElementById('diseaseError').style.display = 'block';
+    document.getElementById('diseaseError').innerHTML =
+      `<p style="color:#856404;">❌ ${isHindi ? 'कनेक्शन त्रुटि' : 'Connection error. Please try again.'}</p>`;
+  }
+}
+
+// ── Render Results ────────────────────────────────
+function renderResults(data) {
+  const hi = isHindi;
+
+  // Plant ID card
+  document.getElementById('plantIdCard').innerHTML = `
+    <div style="background:linear-gradient(135deg,#e8f5e9,#f0faf4);
+                border-radius:var(--radius-md); padding:1.2rem;
+                border:1.5px solid var(--green-pale);">
+      <div style="display:flex; align-items:center; gap:12px;">
+        <span style="font-size:2rem;">🌿</span>
+        <div>
+          <div style="font-size:0.75rem; color:var(--text-light); font-weight:700;
+                      text-transform:uppercase; letter-spacing:1px;">
+            ${hi ? 'पहचाना गया पौधा' : 'Identified Plant'}
+          </div>
+          <div style="font-family:'Baloo 2',cursive; font-size:1.2rem;
+                      font-weight:800; color:var(--green-dark);">
+            ${data.plant_name}
+          </div>
+          <div style="font-size:0.82rem; color:var(--green-mid); font-weight:600;">
+            ${data.plant_probability}% ${hi ? 'मिलान' : 'confidence'}
+          </div>
+        </div>
+      </div>
+    </div>`;
+
+  // Health status
+  const healthy = data.is_healthy;
+  document.getElementById('healthCard').innerHTML = `
+    <div style="background:${healthy ? 'linear-gradient(135deg,#eafaf1,#d5f5e3)' : 'linear-gradient(135deg,#fdecea,#fad7d3)'};
+                border-radius:var(--radius-md); padding:1.2rem;
+                border:1.5px solid ${healthy ? '#27ae60' : '#e74c3c'};">
+      <div style="display:flex; align-items:center; gap:12px;">
+        <span style="font-size:2.5rem;">${healthy ? '✅' : '🚨'}</span>
+        <div>
+          <div style="font-family:'Baloo 2',cursive; font-size:1.1rem;
+                      font-weight:800; color:${healthy ? '#1e8449' : '#c0392b'};">
+            ${healthy
+              ? (hi ? 'पौधा स्वस्थ है!' : 'Plant is Healthy!')
+              : (hi ? 'रोग पाया गया!' : 'Disease Detected!')}
+          </div>
+          <div style="font-size:0.85rem; color:var(--text-mid); margin-top:2px;">
+            ${data.is_healthy_prob}% ${hi ? 'स्वस्थ होने की संभावना' : 'probability of being healthy'}
+          </div>
+        </div>
+      </div>
+    </div>`;
+
+  // Diseases
+  const dc = document.getElementById('diseasesCard');
+  if (!data.diseases || data.diseases.length === 0) {
+    dc.innerHTML = `
+      <div style="background:#eafaf1; border-radius:var(--radius-md);
+                  padding:1.5rem; text-align:center; border:1.5px solid #27ae60;">
+        <p style="color:#1e8449; font-weight:700;">
+          🎉 ${hi ? 'कोई रोग नहीं मिला। पौधा स्वस्थ है!' : 'No diseases found. Plant looks healthy!'}
+        </p>
+      </div>`;
+    return;
+  }
+
+  dc.innerHTML = `
+    <div style="font-size:0.82rem; font-weight:800; color:var(--text-light);
+                text-transform:uppercase; letter-spacing:1px; margin-bottom:10px;">
+      🦠 ${hi ? 'पाए गए रोग' : 'Detected Diseases'}
+    </div>`;
+
+  data.diseases.forEach((d, i) => {
+    const probColor = d.probability > 70 ? '#e74c3c' : d.probability > 40 ? '#f39c12' : '#27ae60';
+
+    const chemTreatment  = d.treatment.chemical   || [];
+    const bioTreatment   = d.treatment.biological || [];
+    const prevention     = d.treatment.prevention || [];
+
+    dc.innerHTML += `
+      <div style="background:white; border-radius:var(--radius-md);
+                  border:1.5px solid #f0f0f0; margin-bottom:12px; overflow:hidden;
+                  box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+
+        <!-- Disease Header -->
+        <div style="padding:1rem 1.2rem; background:${i===0?'linear-gradient(135deg,#fdecea,#fad7d3)':'#fafafa'};
+                    display:flex; align-items:center; justify-content:space-between;">
+          <div>
+            <div style="font-family:'Baloo 2',cursive; font-size:1rem;
+                        font-weight:800; color:#c0392b;">
+              ${i===0 ? '⚠️' : '🔸'} ${d.name}
+            </div>
+            ${d.description ? `
+            <div style="font-size:0.78rem; color:var(--text-mid); margin-top:4px;
+                        max-width:300px; line-height:1.4;">
+              ${d.description.substring(0, 120)}${d.description.length > 120 ? '...' : ''}
+            </div>` : ''}
+          </div>
+          <div style="text-align:right; flex-shrink:0; margin-left:10px;">
+            <div style="font-size:1.4rem; font-weight:800; color:${probColor};">
+              ${d.probability}%
+            </div>
+            <div style="font-size:0.72rem; color:var(--text-light);">
+              ${hi ? 'संभावना' : 'probability'}
+            </div>
+          </div>
+        </div>
+
+        <!-- Treatment -->
+        <div style="padding:1rem 1.2rem;">
+
+          ${chemTreatment.length ? `
+          <div style="margin-bottom:10px;">
+            <div style="font-size:0.78rem; font-weight:800; color:#e74c3c;
+                        margin-bottom:6px; display:flex; align-items:center; gap:6px;">
+              🧪 ${hi ? 'रासायनिक उपचार' : 'Chemical Treatment'}
+            </div>
+            <ul style="margin:0; padding-left:1.2rem;">
+              ${chemTreatment.slice(0,3).map(t =>
+                `<li style="font-size:0.8rem; color:var(--text-mid);
+                            line-height:1.6;">${t}</li>`
+              ).join('')}
+            </ul>
+          </div>` : ''}
+
+          ${bioTreatment.length ? `
+          <div style="margin-bottom:10px;">
+            <div style="font-size:0.78rem; font-weight:800; color:#27ae60;
+                        margin-bottom:6px; display:flex; align-items:center; gap:6px;">
+              🌿 ${hi ? 'जैविक उपचार' : 'Biological Treatment'}
+            </div>
+            <ul style="margin:0; padding-left:1.2rem;">
+              ${bioTreatment.slice(0,3).map(t =>
+                `<li style="font-size:0.8rem; color:var(--text-mid);
+                            line-height:1.6;">${t}</li>`
+              ).join('')}
+            </ul>
+          </div>` : ''}
+
+          ${prevention.length ? `
+          <div>
+            <div style="font-size:0.78rem; font-weight:800; color:#3498db;
+                        margin-bottom:6px; display:flex; align-items:center; gap:6px;">
+              🛡️ ${hi ? 'बचाव' : 'Prevention'}
+            </div>
+            <ul style="margin:0; padding-left:1.2rem;">
+              ${prevention.slice(0,3).map(t =>
+                `<li style="font-size:0.8rem; color:var(--text-mid);
+                            line-height:1.6;">${t}</li>`
+              ).join('')}
+            </ul>
+          </div>` : ''}
+
+          ${!chemTreatment.length && !bioTreatment.length && !prevention.length ? `
+          <p style="font-size:0.82rem; color:var(--text-light);">
+            ${hi ? 'उपचार विवरण उपलब्ध नहीं। कृषि विशेषज्ञ से संपर्क करें।'
+                 : 'Treatment details not available. Consult an agricultural expert.'}
+          </p>` : ''}
+
+        </div>
+
+        ${d.similar_images.length ? `
+        <div style="padding:0 1.2rem 1rem; display:flex; gap:8px;">
+          ${d.similar_images.map(url =>
+            `<img src="${url}" style="width:80px; height:60px; object-fit:cover;
+             border-radius:8px; border:1px solid #eee;" onerror="this.style.display='none'"/>`
+          ).join('')}
+          <span style="font-size:0.72rem; color:var(--text-light); align-self:center;">
+            ${hi ? 'समान छवियां' : 'Similar cases'}
+          </span>
+        </div>` : ''}
+
+      </div>`;
+  });
+}
+
+// Responsive
+window.addEventListener('resize', () => {
+  const grid = document.querySelector('.section > div');
+  if (grid) grid.style.gridTemplateColumns = window.innerWidth < 768 ? '1fr' : '1fr 1fr';
+});
+</script>
+{% endblock %}

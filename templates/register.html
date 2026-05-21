@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+{% block title %}Register{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+  <div class="auth-card" style="max-width:520px;">
+
+    <div class="auth-logo">
+      <div class="auth-logo-icon">🌱</div>
+      <h2 data-en="Create Account" data-hi="खाता बनाएं">
+        {% if session.get('lang')=='hi' %}खाता बनाएं{% else %}Create Account{% endif %}
+      </h2>
+      <p data-en="Join thousands of smart farmers" data-hi="हजारों स्मार्ट किसानों से जुड़ें">
+        {% if session.get('lang')=='hi' %}हजारों स्मार्ट किसानों से जुड़ें{% else %}Join thousands of smart farmers{% endif %}
+      </p>
+    </div>
+
+    <form method="POST" action="{{ url_for('register') }}">
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label">
+            {% if session.get('lang')=='hi' %}पूरा नाम{% else %}Full Name{% endif %}
+          </label>
+          <input type="text" name="name" class="form-control" required
+                 placeholder="{% if session.get('lang')=='hi' %}आपका नाम{% else %}Your name{% endif %}"/>
+        </div>
+
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label">
+            {% if session.get('lang')=='hi' %}मोबाइल नंबर{% else %}Mobile Number{% endif %}
+          </label>
+          <input type="tel" name="phone" class="form-control"
+                 placeholder="{% if session.get('lang')=='hi' %}10 अंक{% else %}10 digits{% endif %}"/>
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-top:12px;">
+        <label class="form-label">
+          {% if session.get('lang')=='hi' %}ईमेल पता{% else %}Email Address{% endif %}
+        </label>
+        <input type="email" name="email" class="form-control" required
+               placeholder="{% if session.get('lang')=='hi' %}अपना ईमेल दर्ज करें{% else %}Enter your email{% endif %}"/>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">
+          {% if session.get('lang')=='hi' %}राज्य{% else %}State{% endif %}
+        </label>
+        <select name="state" class="form-control">
+          <option value="">-- {% if session.get('lang')=='hi' %}राज्य चुनें{% else %}Select State{% endif %} --</option>
+          {% set states = ['Andhra Pradesh','Arunachal Pradesh','Assam','Bihar','Chhattisgarh',
+            'Goa','Gujarat','Haryana','Himachal Pradesh','Jharkhand','Karnataka','Kerala',
+            'Madhya Pradesh','Maharashtra','Manipur','Meghalaya','Mizoram','Nagaland',
+            'Odisha','Punjab','Rajasthan','Sikkim','Tamil Nadu','Telangana','Tripura',
+            'Uttar Pradesh','Uttarakhand','West Bengal'] %}
+          {% for s in states %}
+          <option value="{{ s }}">{{ s }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label">
+            {% if session.get('lang')=='hi' %}पासवर्ड{% else %}Password{% endif %}
+          </label>
+          <input type="password" name="password" id="pass1" class="form-control" required
+                 placeholder="{% if session.get('lang')=='hi' %}कम से कम 6 अक्षर{% else %}Min 6 characters{% endif %}"/>
+        </div>
+
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label">
+            {% if session.get('lang')=='hi' %}पासवर्ड दोबारा{% else %}Confirm Password{% endif %}
+          </label>
+          <input type="password" name="confirm_password" id="pass2" class="form-control" required
+                 placeholder="{% if session.get('lang')=='hi' %}दोबारा दर्ज करें{% else %}Re-enter password{% endif %}"/>
+        </div>
+      </div>
+
+      <!-- Password strength -->
+      <div style="margin-top:10px; margin-bottom:1.2rem;">
+        <div style="height:4px; background:#e0e0e0; border-radius:4px; overflow:hidden;">
+          <div id="strengthBar" style="height:100%; width:0%; transition:all 0.3s; border-radius:4px;"></div>
+        </div>
+        <p id="strengthText" style="font-size:0.75rem; color:var(--text-light); margin-top:4px;"></p>
+      </div>
+
+      <button type="submit" class="btn-green" style="font-size:1rem; padding:14px;">
+        🌱
+        <span data-en="Create My Account" data-hi="मेरा खाता बनाएं">
+          {% if session.get('lang')=='hi' %}मेरा खाता बनाएं{% else %}Create My Account{% endif %}
+        </span>
+      </button>
+    </form>
+
+    <div class="auth-divider">
+      {% if session.get('lang')=='hi' %}या{% else %}or{% endif %}
+    </div>
+
+    <div class="auth-link">
+      <span data-en="Already have an account?" data-hi="पहले से खाता है?">
+        {% if session.get('lang')=='hi' %}पहले से खाता है?{% else %}Already have an account?{% endif %}
+      </span>
+      <a href="{{ url_for('login') }}" data-en=" Login here" data-hi=" यहाँ लॉगिन करें">
+        {% if session.get('lang')=='hi' %} यहाँ लॉगिन करें{% else %} Login here{% endif %}
+      </a>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Password strength meter
+document.getElementById('pass1').addEventListener('input', function() {
+  const val = this.value;
+  const bar = document.getElementById('strengthBar');
+  const txt = document.getElementById('strengthText');
+  let strength = 0;
+  if (val.length >= 6)  strength++;
+  if (val.length >= 10) strength++;
+  if (/[A-Z]/.test(val)) strength++;
+  if (/[0-9]/.test(val)) strength++;
+  if (/[^A-Za-z0-9]/.test(val)) strength++;
+
+  const levels = [
+    { w:'0%',   c:'',        t:'' },
+    { w:'25%',  c:'#e74c3c', t:'Weak' },
+    { w:'50%',  c:'#f39c12', t:'Fair' },
+    { w:'75%',  c:'#3498db', t:'Good' },
+    { w:'90%',  c:'#27ae60', t:'Strong' },
+    { w:'100%', c:'#1a6b3c', t:'Very Strong' },
+  ];
+  bar.style.width = levels[strength].w;
+  bar.style.background = levels[strength].c;
+  txt.textContent = levels[strength].t;
+  txt.style.color = levels[strength].c;
+});
+
+// Confirm password match
+document.getElementById('pass2').addEventListener('input', function() {
+  const p1 = document.getElementById('pass1').value;
+  this.style.borderColor = this.value === p1 ? 'var(--green-light)' : '#e74c3c';
+});
+</script>
+{% endblock %}

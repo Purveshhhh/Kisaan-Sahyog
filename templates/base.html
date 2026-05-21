@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="{{ session.get('lang', 'en') }}">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{% block title %}Kisaan Sahyog{% endblock %} | किसान सहयोग</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"/>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌾</text></svg>"/>
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<!-- ── NAVBAR ──────────────────────────────────── -->
+<nav class="navbar">
+  <a href="{{ url_for('index') }}" class="navbar-brand">
+    <div class="brand-icon">🌾</div>
+    <div class="brand-text">
+      <span class="brand-title" data-en="Kisaan Sahyog" data-hi="किसान सहयोग">
+        {% if session.get('lang') == 'hi' %}किसान सहयोग{% else %}Kisaan Sahyog{% endif %}
+      </span>
+      <span class="brand-sub" data-en="Farmer's Companion" data-hi="किसान का साथी">
+        {% if session.get('lang') == 'hi' %}किसान का साथी{% else %}Farmer's Companion{% endif %}
+      </span>
+    </div>
+  </a>
+
+  {% if current_user.is_authenticated %}
+  <ul class="nav-links" id="navLinks">
+    <li>
+      <a href="{{ url_for('index') }}" class="{{ 'active' if request.endpoint == 'index' }}">
+        <span class="nav-icon">🏠</span>
+        <span data-en="Home" data-hi="होम">
+          {% if session.get('lang') == 'hi' %}होम{% else %}Home{% endif %}
+        </span>
+      </a>
+    </li>
+    <li>
+      <a href="{{ url_for('weather') }}" class="{{ 'active' if request.endpoint == 'weather' }}">
+        <span class="nav-icon">🌦️</span>
+        <span data-en="Weather" data-hi="मौसम">
+          {% if session.get('lang') == 'hi' %}मौसम{% else %}Weather{% endif %}
+        </span>
+      </a>
+    </li>
+    <li>
+      <a href="{{ url_for('disease') }}" class="{{ 'active' if request.endpoint == 'disease' }}">
+        <span class="nav-icon">🌿</span>
+        <span data-en="Disease" data-hi="रोग पहचान">
+          {% if session.get('lang') == 'hi' %}रोग पहचान{% else %}Disease{% endif %}
+        </span>
+      </a>
+    </li>
+    <li>
+      <a href="{{ url_for('mandi') }}" class="{{ 'active' if request.endpoint == 'mandi' }}">
+        <span class="nav-icon">📊</span>
+        <span data-en="Mandi Rates" data-hi="मंडी भाव">
+          {% if session.get('lang') == 'hi' %}मंडी भाव{% else %}Mandi Rates{% endif %}
+        </span>
+      </a>
+    </li>
+    <li>
+      <a href="{{ url_for('crop_suggest') }}" class="{{ 'active' if request.endpoint == 'crop_suggest' }}">
+        <span class="nav-icon">🌱</span>
+        <span data-en="Crop Suggest" data-hi="फसल सुझाव">
+          {% if session.get('lang') == 'hi' %}फसल सुझाव{% else %}Crop Suggest{% endif %}
+        </span>
+      </a>
+    </li>
+  </ul>
+  {% endif %}
+
+  <div style="display:flex; align-items:center; gap:12px;">
+    <!-- Language Toggle -->
+    <div class="lang-toggle">
+      <a href="{{ url_for('set_language', lang='en') }}" style="text-decoration:none;">
+        <button class="lang-btn {{ 'active' if session.get('lang', 'en') == 'en' }}">EN</button>
+      </a>
+      <a href="{{ url_for('set_language', lang='hi') }}" style="text-decoration:none;">
+        <button class="lang-btn {{ 'active' if session.get('lang') == 'hi' }}">हि</button>
+      </a>
+    </div>
+
+    {% if current_user.is_authenticated %}
+    <div class="nav-user">
+      <div class="user-avatar">{{ current_user.name[0].upper() }}</div>
+      <span class="user-name" style="display:none;" id="userName">{{ current_user.name.split()[0] }}</span>
+      <a href="{{ url_for('logout') }}" class="btn-logout"
+         data-en="Logout" data-hi="लॉगआउट">
+        {% if session.get('lang') == 'hi' %}लॉगआउट{% else %}Logout{% endif %}
+      </a>
+    </div>
+    {% else %}
+    <a href="{{ url_for('login') }}" class="btn-logout"
+       data-en="Login" data-hi="लॉगिन">
+      {% if session.get('lang') == 'hi' %}लॉगिन{% else %}Login{% endif %}
+    </a>
+    {% endif %}
+
+    <div class="hamburger" onclick="toggleMenu()" id="hamburger">
+      <span></span><span></span><span></span>
+    </div>
+  </div>
+</nav>
+
+<!-- ── FLASH MESSAGES ──────────────────────────── -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <div class="flash-container" id="flashContainer">
+    {% for category, message in messages %}
+    <div class="flash-msg flash-{{ category }}" onclick="this.remove()">
+      {% if category == 'success' %}✅{% elif category == 'danger' %}❌{% elif category == 'warning' %}⚠️{% else %}ℹ️{% endif %}
+      {{ message }}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+{% endwith %}
+
+<!-- ── PAGE CONTENT ────────────────────────────── -->
+<div class="page-wrapper">
+  {% block content %}{% endblock %}
+</div>
+
+<!-- ── FOOTER ──────────────────────────────────── -->
+<footer class="footer">
+  <p>
+    <span data-en="© 2024 Kisaan Sahyog — Built with ❤️ for Indian Farmers"
+          data-hi="© 2024 किसान सहयोग — भारतीय किसानों के लिए ❤️ के साथ बनाया गया">
+      {% if session.get('lang') == 'hi' %}
+        © 2024 किसान सहयोग — भारतीय किसानों के लिए ❤️ के साथ बनाया गया
+      {% else %}
+        © 2024 Kisaan Sahyog — Built with ❤️ for Indian Farmers
+      {% endif %}
+    </span>
+  </p>
+</footer>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

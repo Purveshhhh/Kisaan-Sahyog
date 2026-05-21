@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}Login{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+  <div class="auth-card">
+
+    <div class="auth-logo">
+      <div class="auth-logo-icon">🌾</div>
+      <h2 data-en="Welcome Back" data-hi="वापस स्वागत है">
+        {% if session.get('lang')=='hi' %}वापस स्वागत है{% else %}Welcome Back{% endif %}
+      </h2>
+      <p data-en="Login to your Kisaan Sahyog account" data-hi="अपने किसान सहयोग खाते में लॉगिन करें">
+        {% if session.get('lang')=='hi' %}अपने किसान सहयोग खाते में लॉगिन करें{% else %}Login to your Kisaan Sahyog account{% endif %}
+      </p>
+    </div>
+
+    <form method="POST" action="{{ url_for('login') }}">
+      <div class="form-group">
+        <label class="form-label" data-en="Email Address" data-hi="ईमेल पता">
+          {% if session.get('lang')=='hi' %}ईमेल पता{% else %}Email Address{% endif %}
+        </label>
+        <input type="email" name="email" class="form-control" required
+               placeholder="{% if session.get('lang')=='hi' %}अपना ईमेल दर्ज करें{% else %}Enter your email{% endif %}"/>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" data-en="Password" data-hi="पासवर्ड">
+          {% if session.get('lang')=='hi' %}पासवर्ड{% else %}Password{% endif %}
+        </label>
+        <div style="position:relative;">
+          <input type="password" name="password" id="passwordField" class="form-control" required
+                 placeholder="{% if session.get('lang')=='hi' %}अपना पासवर्ड दर्ज करें{% else %}Enter your password{% endif %}"/>
+          <span onclick="togglePassword()" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:1.1rem;" id="eyeIcon">👁️</span>
+        </div>
+      </div>
+
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1.5rem;">
+        <label style="display:flex;align-items:center;gap:8px;font-size:0.85rem;color:var(--text-mid);cursor:pointer;">
+          <input type="checkbox" name="remember" style="accent-color:var(--green-mid);width:16px;height:16px;"/>
+          <span data-en="Remember me" data-hi="मुझे याद रखें">
+            {% if session.get('lang')=='hi' %}मुझे याद रखें{% else %}Remember me{% endif %}
+          </span>
+        </label>
+      </div>
+      <div style="text-align:right; margin-bottom:1.2rem;">
+  <a href="{{ url_for('forgot_password') }}"
+     style="font-size:0.85rem; color:var(--green-mid); font-weight:600; text-decoration:none;">
+    {% if session.get('lang')=='hi' %}पासवर्ड भूल गए?{% else %}Forgot Password?{% endif %}
+  </a>
+</div>
+
+      <button type="submit" class="btn-green" style="font-size:1rem; padding:14px;">
+        🔑
+        <span data-en="Login to Account" data-hi="खाते में लॉगिन करें">
+          {% if session.get('lang')=='hi' %}खाते में लॉगिन करें{% else %}Login to Account{% endif %}
+        </span>
+      </button>
+    </form>
+
+    <div class="auth-divider">
+      {% if session.get('lang')=='hi' %}या{% else %}or{% endif %}
+    </div>
+
+    <div class="auth-link">
+      <span data-en="Don't have an account?" data-hi="खाता नहीं है?">
+        {% if session.get('lang')=='hi' %}खाता नहीं है?{% else %}Don't have an account?{% endif %}
+      </span>
+      <a href="{{ url_for('register') }}" data-en=" Register here" data-hi=" यहाँ रजिस्टर करें">
+        {% if session.get('lang')=='hi' %} यहाँ रजिस्टर करें{% else %} Register here{% endif %}
+      </a>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function togglePassword() {
+  const f = document.getElementById('passwordField');
+  const e = document.getElementById('eyeIcon');
+  if (f.type === 'password') { f.type = 'text'; e.textContent = '🙈'; }
+  else { f.type = 'password'; e.textContent = '👁️'; }
+}
+</script>
+{% endblock %}

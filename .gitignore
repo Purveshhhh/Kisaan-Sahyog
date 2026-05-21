@@ -1,0 +1,26 @@
+# Virtual Environment
+venv/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Environment variables
+.env
+
+# VS Code settings
+.vscode/
+
+# Database files
+*.db
+
+# Logs
+*.log
+
+# Uploads
+static/uploads/
+
+# Model files (optional if large)
+*.h5
+*.pt
+*.pth

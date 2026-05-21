@@ -1,0 +1,261 @@
+{% extends "base.html" %}
+{% block title %}Home{% endblock %}
+
+{% block content %}
+
+<!-- ── HERO ─────────────────────────────────────── -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-particles" id="particles"></div>
+
+  <div class="hero-content">
+    <!-- Left Side -->
+    <div class="hero-left">
+      <div class="hero-badge">🇮🇳
+        <span data-en="Smart Farming Platform" data-hi="स्मार्ट कृषि मंच">
+          {% if session.get('lang')=='hi' %}स्मार्ट कृषि मंच{% else %}Smart Farming Platform{% endif %}
+        </span>
+      </div>
+
+      <h1 class="hero-title">
+        <span data-en="Kisaan" data-hi="किसान">{% if session.get('lang')=='hi' %}किसान{% else %}Kisaan{% endif %}</span>
+        <span data-en=" Sahyog" data-hi=" सहयोग">{% if session.get('lang')=='hi' %} सहयोग{% else %} Sahyog{% endif %}</span><br/>
+        <span style="-webkit-text-fill-color:inherit; background:none; color:rgba(255,255,255,0.85); font-size:0.6em;" 
+              data-en="Your Smart Farming Companion" data-hi="आपका स्मार्ट कृषि साथी">
+          {% if session.get('lang')=='hi' %}आपका स्मार्ट कृषि साथी{% else %}Your Smart Farming Companion{% endif %}
+        </span>
+      </h1>
+
+      <p class="hero-subtitle">
+        {% if session.get('lang')=='hi' %}
+          खेती को आसान, स्मार्ट और लाभदायक बनाएं
+        {% else %}
+          Making farming easier, smarter and more profitable
+        {% endif %}
+      </p>
+
+      <p class="hero-desc">
+        {% if session.get('lang')=='hi' %}
+          मौसम पूर्वानुमान, फसल रोग पहचान, मंडी भाव और मिट्टी के आधार पर फसल सुझाव — सब कुछ एक जगह।
+        {% else %}
+          Real-time weather forecasting, crop disease detection, live mandi rates, and soil-based crop suggestions — all in one place.
+        {% endif %}
+      </p>
+
+      <div class="hero-btns">
+        {% if current_user.is_authenticated %}
+          <a href="{{ url_for('weather') }}" class="btn-primary">
+            🚀
+            <span data-en="Explore Now" data-hi="अभी देखें">
+              {% if session.get('lang')=='hi' %}अभी देखें{% else %}Explore Now{% endif %}
+            </span>
+          </a>
+        {% else %}
+          <a href="{{ url_for('register') }}" class="btn-primary">
+            🌾
+            <span data-en="Get Started Free" data-hi="मुफ़्त शुरू करें">
+              {% if session.get('lang')=='hi' %}मुफ़्त शुरू करें{% else %}Get Started Free{% endif %}
+            </span>
+          </a>
+          <a href="{{ url_for('login') }}" class="btn-secondary">
+            🔑
+            <span data-en="Login" data-hi="लॉगिन">
+              {% if session.get('lang')=='hi' %}लॉगिन{% else %}Login{% endif %}
+            </span>
+          </a>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Right Side — Feature Cards -->
+    <div class="hero-cards">
+      <a href="{{ url_for('weather') if current_user.is_authenticated else url_for('login') }}" class="hero-card">
+        <span class="hero-card-icon">🌦️</span>
+        <div class="hero-card-title" data-en="Weather Forecast" data-hi="मौसम पूर्वानुमान">
+          {% if session.get('lang')=='hi' %}मौसम पूर्वानुमान{% else %}Weather Forecast{% endif %}
+        </div>
+        <div class="hero-card-desc" data-en="Live weather for your location" data-hi="आपके स्थान का लाइव मौसम">
+          {% if session.get('lang')=='hi' %}आपके स्थान का लाइव मौसम{% else %}Live weather for your location{% endif %}
+        </div>
+      </a>
+
+      <a href="{{ url_for('disease') if current_user.is_authenticated else url_for('login') }}" class="hero-card">
+        <span class="hero-card-icon">🌿</span>
+        <div class="hero-card-title" data-en="Disease Detection" data-hi="रोग पहचान">
+          {% if session.get('lang')=='hi' %}रोग पहचान{% else %}Disease Detection{% endif %}
+        </div>
+        <div class="hero-card-desc" data-en="Upload leaf photo for AI diagnosis" data-hi="AI निदान के लिए पत्ती की फोटो अपलोड करें">
+          {% if session.get('lang')=='hi' %}AI निदान के लिए पत्ती की फोटो अपलोड करें{% else %}Upload leaf photo for AI diagnosis{% endif %}
+        </div>
+      </a>
+
+      <a href="{{ url_for('mandi') if current_user.is_authenticated else url_for('login') }}" class="hero-card">
+        <span class="hero-card-icon">📊</span>
+        <div class="hero-card-title" data-en="Mandi Rates" data-hi="मंडी भाव">
+          {% if session.get('lang')=='hi' %}मंडी भाव{% else %}Mandi Rates{% endif %}
+        </div>
+        <div class="hero-card-desc" data-en="Real-time market prices" data-hi="रियल-टाइम बाजार भाव">
+          {% if session.get('lang')=='hi' %}रियल-टाइम बाजार भाव{% else %}Real-time market prices{% endif %}
+        </div>
+      </a>
+
+      <a href="{{ url_for('crop_suggest') if current_user.is_authenticated else url_for('login') }}" class="hero-card">
+        <span class="hero-card-icon">🌱</span>
+        <div class="hero-card-title" data-en="Crop Suggestion" data-hi="फसल सुझाव">
+          {% if session.get('lang')=='hi' %}फसल सुझाव{% else %}Crop Suggestion{% endif %}
+        </div>
+        <div class="hero-card-desc" data-en="AI-based crop recommendation" data-hi="AI आधारित फसल सिफारिश">
+          {% if session.get('lang')=='hi' %}AI आधारित फसल सिफारिश{% else %}AI-based crop recommendation{% endif %}
+        </div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ── STATS STRIP ───────────────────────────────── -->
+<div class="stats-strip">
+  <div class="stats-grid">
+    <div class="stat-item">
+      <span class="stat-number">10K+</span>
+      <span class="stat-label" data-en="Farmers Helped" data-hi="किसानों की मदद">
+        {% if session.get('lang')=='hi' %}किसानों की मदद{% else %}Farmers Helped{% endif %}
+      </span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-number">500+</span>
+      <span class="stat-label" data-en="Mandis Tracked" data-hi="मंडियां ट्रैक">
+        {% if session.get('lang')=='hi' %}मंडियां ट्रैक{% else %}Mandis Tracked{% endif %}
+      </span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-number">95%</span>
+      <span class="stat-label" data-en="Disease Accuracy" data-hi="रोग पहचान सटीकता">
+        {% if session.get('lang')=='hi' %}रोग पहचान सटीकता{% else %}Disease Accuracy{% endif %}
+      </span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-number">22</span>
+      <span class="stat-label" data-en="Crops Supported" data-hi="फसलें समर्थित">
+        {% if session.get('lang')=='hi' %}फसलें समर्थित{% else %}Crops Supported{% endif %}
+      </span>
+    </div>
+  </div>
+</div>
+
+<!-- ── FEATURES ──────────────────────────────────── -->
+<div style="background: var(--cream); padding: 1rem 0;">
+  <div class="section">
+    <div class="section-header">
+      <div class="section-tag">
+        {% if session.get('lang')=='hi' %}हमारी सेवाएं{% else %}Our Services{% endif %}
+      </div>
+      <h2 class="section-title">
+        {% if session.get('lang')=='hi' %}किसान के लिए हर ज़रूरत{% else %}Everything a Farmer Needs{% endif %}
+      </h2>
+      <p class="section-desc">
+        {% if session.get('lang')=='hi' %}
+          आधुनिक तकनीक से खेती को बेहतर बनाने के लिए चार शक्तिशाली उपकरण
+        {% else %}
+          Four powerful tools powered by modern technology to make farming better
+        {% endif %}
+      </p>
+    </div>
+
+    <div class="features-grid">
+      <a href="{{ url_for('weather') if current_user.is_authenticated else url_for('login') }}" class="feature-card">
+        <div class="feature-icon-wrap icon-weather">🌦️</div>
+        <div class="feature-title">
+          {% if session.get('lang')=='hi' %}मौसम पूर्वानुमान{% else %}Weather Forecast{% endif %}
+        </div>
+        <p class="feature-desc">
+          {% if session.get('lang')=='hi' %}
+            अपने शहर का लाइव तापमान, नमी, हवा की गति और 5-दिन का पूर्वानुमान देखें।
+          {% else %}
+            Get live temperature, humidity, wind speed and 5-day forecast for your city.
+          {% endif %}
+        </p>
+        <span class="feature-link">
+          {% if session.get('lang')=='hi' %}अभी देखें →{% else %}View Now →{% endif %}
+        </span>
+      </a>
+
+      <a href="{{ url_for('disease') if current_user.is_authenticated else url_for('login') }}" class="feature-card">
+        <div class="feature-icon-wrap icon-disease">🌿</div>
+        <div class="feature-title">
+          {% if session.get('lang')=='hi' %}फसल रोग पहचान{% else %}Crop Disease Detection{% endif %}
+        </div>
+        <p class="feature-desc">
+          {% if session.get('lang')=='hi' %}
+            पत्ती की फोटो अपलोड करें और AI तुरंत रोग की पहचान करके उपचार बताएगा।
+          {% else %}
+            Upload a leaf photo and our AI instantly identifies the disease and suggests treatment.
+          {% endif %}
+        </p>
+        <span class="feature-link">
+          {% if session.get('lang')=='hi' %}फोटो अपलोड करें →{% else %}Upload Photo →{% endif %}
+        </span>
+      </a>
+
+      <a href="{{ url_for('mandi') if current_user.is_authenticated else url_for('login') }}" class="feature-card">
+        <div class="feature-icon-wrap icon-mandi">📊</div>
+        <div class="feature-title">
+          {% if session.get('lang')=='hi' %}मंडी भाव{% else %}Mandi Rates{% endif %}
+        </div>
+        <p class="feature-desc">
+          {% if session.get('lang')=='hi' %}
+            भारत की प्रमुख मंडियों के रियल-टाइम बाजार भाव देखें और सही समय पर बेचें।
+          {% else %}
+            Check real-time market prices from major mandis across India and sell at the right time.
+          {% endif %}
+        </p>
+        <span class="feature-link">
+          {% if session.get('lang')=='hi' %}भाव देखें →{% else %}Check Rates →{% endif %}
+        </span>
+      </a>
+
+      <a href="{{ url_for('crop_suggest') if current_user.is_authenticated else url_for('login') }}" class="feature-card">
+        <div class="feature-icon-wrap icon-crop">🌱</div>
+        <div class="feature-title">
+          {% if session.get('lang')=='hi' %}फसल सुझाव{% else %}Crop Suggestion{% endif %}
+        </div>
+        <p class="feature-desc">
+          {% if session.get('lang')=='hi' %}
+            मिट्टी की NPK, pH और वर्षा के आधार पर AI आपके खेत के लिए सबसे अच्छी फसल सुझाएगा।
+          {% else %}
+            Based on soil NPK, pH and rainfall, AI recommends the best crops for your field.
+          {% endif %}
+        </p>
+        <span class="feature-link">
+          {% if session.get('lang')=='hi' %}सुझाव पाएं →{% else %}Get Suggestion →{% endif %}
+        </span>
+      </a>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Floating particles
+const container = document.getElementById('particles');
+if (container) {
+  const emojis = ['🌾','🌱','🍃','🌿','💧','☀️','🌻'];
+  for (let i = 0; i < 18; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.cssText = `
+      left: ${Math.random()*100}%;
+      width: ${20+Math.random()*20}px;
+      height: ${20+Math.random()*20}px;
+      animation-duration: ${8+Math.random()*12}s;
+      animation-delay: ${Math.random()*10}s;
+      font-size: ${16+Math.random()*14}px;
+      background: none;
+    `;
+    p.textContent = emojis[Math.floor(Math.random()*emojis.length)];
+    container.appendChild(p);
+  }
+}
+</script>
+{% endblock %}

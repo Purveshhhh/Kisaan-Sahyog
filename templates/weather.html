@@ -1,0 +1,405 @@
+{% extends "base.html" %}
+{% block title %}Weather{% endblock %}
+
+{% block content %}
+
+<div class="page-hero">
+  <div class="page-hero-content">
+    <span class="page-hero-icon">🌦️</span>
+    <h1 data-en="Weather Forecast" data-hi="मौसम पूर्वानुमान">
+      {% if session.get('lang')=='hi' %}मौसम पूर्वानुमान{% else %}Weather Forecast{% endif %}
+    </h1>
+    <p data-en="Real-time weather for any city in India" data-hi="भारत के किसी भी शहर का रियल-टाइम मौसम">
+      {% if session.get('lang')=='hi' %}भारत के किसी भी शहर का रियल-टाइम मौसम{% else %}Real-time weather for any city in India{% endif %}
+    </p>
+  </div>
+</div>
+
+<div class="section" style="max-width:900px;">
+
+  <!-- Search Box -->
+  <div class="card" style="margin-bottom:2rem;">
+    <div class="card-body" style="padding:1.5rem;">
+      <div style="display:flex; gap:12px; flex-wrap:wrap;">
+        <input type="text" id="cityInput" class="form-control" style="flex:1; min-width:200px;"
+               placeholder="{% if session.get('lang')=='hi' %}शहर का नाम दर्ज करें (जैसे Delhi, Mumbai){% else %}Enter city name (e.g. Delhi, Mumbai){% endif %}"
+               value="Delhi" onkeydown="if(event.key==='Enter') fetchWeather()"/>
+        <button onclick="fetchWeather()" class="btn-green" style="width:auto; padding:12px 28px;">
+          🔍 <span>{% if session.get('lang')=='hi' %}खोजें{% else %}Search{% endif %}</span>
+        </button>
+        <button onclick="getLocation()"
+                style="width:auto; padding:12px 20px; background:var(--green-mid); color:white;
+                       border:none; border-radius:var(--radius-md); font-weight:700; cursor:pointer;
+                       display:flex; align-items:center; gap:6px; font-size:0.9rem;">
+          📍 <span>{% if session.get('lang')=='hi' %}मेरा स्थान{% else %}My Location{% endif %}</span>
+        </button>
+      </div>
+
+      <!-- Quick City Buttons -->
+      <div style="margin-top:1rem; display:flex; gap:8px; flex-wrap:wrap;">
+        {% for city in ['Delhi','Mumbai','Pune','Lucknow','Jaipur','Bhopal','Patna','Chandigarh','Hyderabad','Nagpur','Varanasi','Agra'] %}
+        <button onclick="quickSearch('{{city}}')"
+                style="padding:5px 14px; background:var(--green-pale); color:var(--green-dark);
+                       border:1px solid var(--green-light); border-radius:20px; font-size:0.8rem;
+                       font-weight:700; cursor:pointer; transition:all 0.2s;"
+                onmouseover="this.style.background='var(--green-light)'"
+                onmouseout="this.style.background='var(--green-pale)'">
+          {{city}}
+        </button>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading-spinner" id="weatherLoading">
+    <div class="spinner"></div>
+    <p style="color:var(--text-light);">
+      {% if session.get('lang')=='hi' %}मौसम डेटा लोड हो रहा है...{% else %}Loading weather data...{% endif %}
+    </p>
+  </div>
+
+  <!-- Error -->
+  <div id="weatherError" style="display:none; background:#fff3cd; border:1.5px solid #ffc107;
+       border-radius:var(--radius-md); padding:1.2rem; margin-bottom:1rem;">
+  </div>
+
+  <!-- Weather Result -->
+  <div id="weatherResult" style="display:none;">
+
+    <!-- Main Weather Card -->
+    <div class="card" style="margin-bottom:1.5rem; overflow:hidden;">
+      <div style="background:linear-gradient(135deg, var(--green-dark), #1b6ca8);
+                  padding:2.5rem; color:white; position:relative; overflow:hidden;">
+        <div style="position:absolute; top:-20px; right:-20px; font-size:8rem; opacity:0.08;">🌤️</div>
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:1rem;">
+          <div>
+            <h2 id="wCity" style="font-family:'Baloo 2',cursive; font-size:2rem; font-weight:800; margin-bottom:4px;"></h2>
+            <p id="wDesc" style="font-size:1.1rem; opacity:0.85; text-transform:capitalize;"></p>
+            <p id="wDate" style="font-size:0.85rem; opacity:0.65; margin-top:4px;"></p>
+          </div>
+          <div style="text-align:right;">
+            <div id="wTemp" style="font-family:'Baloo 2',cursive; font-size:4.5rem; font-weight:800; line-height:1;"></div>
+            <div id="wFeels" style="font-size:0.85rem; opacity:0.7; margin-top:4px;"></div>
+            <div id="wMinMax" style="font-size:0.85rem; opacity:0.7; margin-top:2px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats Row -->
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr));">
+        <div style="padding:1.2rem; text-align:center; border-right:1px solid #eee; border-bottom:1px solid #eee;">
+          <div style="font-size:1.6rem;">💧</div>
+          <div id="wHumidity" style="font-size:1.4rem; font-weight:800; color:var(--green-dark);"></div>
+          <div style="font-size:0.75rem; color:var(--text-light); font-weight:600;">
+            {% if session.get('lang')=='hi' %}नमी{% else %}Humidity{% endif %}
+          </div>
+        </div>
+        <div style="padding:1.2rem; text-align:center; border-right:1px solid #eee; border-bottom:1px solid #eee;">
+          <div style="font-size:1.6rem;">💨</div>
+          <div id="wWind" style="font-size:1.4rem; font-weight:800; color:var(--green-dark);"></div>
+          <div style="font-size:0.75rem; color:var(--text-light); font-weight:600;">
+            {% if session.get('lang')=='hi' %}हवा km/h{% else %}Wind km/h{% endif %}
+          </div>
+        </div>
+        <div style="padding:1.2rem; text-align:center; border-right:1px solid #eee; border-bottom:1px solid #eee;">
+          <div style="font-size:1.6rem;">👁️</div>
+          <div id="wVisibility" style="font-size:1.4rem; font-weight:800; color:var(--green-dark);"></div>
+          <div style="font-size:0.75rem; color:var(--text-light); font-weight:600;">
+            {% if session.get('lang')=='hi' %}दृश्यता km{% else %}Visibility km{% endif %}
+          </div>
+        </div>
+        <div style="padding:1.2rem; text-align:center; border-right:1px solid #eee; border-bottom:1px solid #eee;">
+          <div style="font-size:1.6rem;">🌡️</div>
+          <div id="wPressure" style="font-size:1.4rem; font-weight:800; color:var(--green-dark);"></div>
+          <div style="font-size:0.75rem; color:var(--text-light); font-weight:600;">
+            {% if session.get('lang')=='hi' %}दबाव hPa{% else %}Pressure hPa{% endif %}
+          </div>
+        </div>
+        <div style="padding:1.2rem; text-align:center; border-right:1px solid #eee; border-bottom:1px solid #eee;">
+          <div style="font-size:1.6rem;">☁️</div>
+          <div id="wClouds" style="font-size:1.4rem; font-weight:800; color:var(--green-dark);"></div>
+          <div style="font-size:0.75rem; color:var(--text-light); font-weight:600;">
+            {% if session.get('lang')=='hi' %}बादल%{% else %}Clouds%{% endif %}
+          </div>
+        </div>
+        <div style="padding:1.2rem; text-align:center; border-right:1px solid #eee; border-bottom:1px solid #eee;">
+          <div style="font-size:1.6rem;">🌅</div>
+          <div id="wSunrise" style="font-size:1.1rem; font-weight:800; color:var(--green-dark);"></div>
+          <div style="font-size:0.75rem; color:var(--text-light); font-weight:600;">
+            {% if session.get('lang')=='hi' %}सूर्योदय{% else %}Sunrise{% endif %}
+          </div>
+        </div>
+        <div style="padding:1.2rem; text-align:center; border-bottom:1px solid #eee;">
+          <div style="font-size:1.6rem;">🌇</div>
+          <div id="wSunset" style="font-size:1.1rem; font-weight:800; color:var(--green-dark);"></div>
+          <div style="font-size:0.75rem; color:var(--text-light); font-weight:600;">
+            {% if session.get('lang')=='hi' %}सूर्यास्त{% else %}Sunset{% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5-Day Forecast -->
+    <div class="card" style="margin-bottom:1.5rem;">
+      <div class="card-header">
+        📅 {% if session.get('lang')=='hi' %}5 दिन का पूर्वानुमान{% else %}5-Day Forecast{% endif %}
+      </div>
+      <div class="card-body" style="padding:1rem;">
+        <div id="forecastGrid"
+             style="display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:12px;">
+        </div>
+      </div>
+    </div>
+
+    <!-- Farming Advice -->
+    <div class="card">
+      <div class="card-header">
+        🌾 {% if session.get('lang')=='hi' %}किसान सलाह{% else %}Farming Advice{% endif %}
+      </div>
+      <div class="card-body">
+        <div id="farmingAdvice"
+             style="display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px;">
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const isHindi = {{ 'true' if session.get('lang')=='hi' else 'false' }};
+
+// ── Quick city search ─────────────────────────────
+function quickSearch(city) {
+  document.getElementById('cityInput').value = city;
+  fetchWeather();
+}
+
+// ── Live location ─────────────────────────────────
+function getLocation() {
+  if (!navigator.geolocation) {
+    alert(isHindi ? 'लोकेशन समर्थित नहीं है' : 'Geolocation not supported');
+    return;
+  }
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      const { latitude: lat, longitude: lon } = pos.coords;
+      fetchWeatherByCoords(lat, lon);
+    },
+    err => {
+      alert(isHindi
+        ? 'लोकेशन की अनुमति दें। ब्राउज़र में Location को Allow करें।'
+        : 'Please allow location access in your browser settings.');
+    },
+    { enableHighAccuracy: true, timeout: 10000 }
+  );
+}
+
+// ── Fetch by coordinates ──────────────────────────
+async function fetchWeatherByCoords(lat, lon) {
+  document.getElementById('weatherLoading').classList.add('show');
+  document.getElementById('weatherResult').style.display = 'none';
+  document.getElementById('weatherError').style.display  = 'none';
+
+  try {
+    const resp = await fetch(`/api/weather?lat=${lat}&lon=${lon}`);
+    const data = await resp.json();
+    document.getElementById('weatherLoading').classList.remove('show');
+
+    if (data.error) {
+      showError(data.error);
+      return;
+    }
+    document.getElementById('cityInput').value = data.city;
+    fillWeatherUI(data);
+    document.getElementById('weatherResult').style.display = 'block';
+  } catch(e) {
+    document.getElementById('weatherLoading').classList.remove('show');
+    showError(isHindi ? 'कनेक्शन त्रुटि' : 'Connection error. Please try again.');
+  }
+}
+
+// ── Fetch by city name ────────────────────────────
+async function fetchWeather() {
+  const city = document.getElementById('cityInput').value.trim();
+  if (!city) return;
+
+  document.getElementById('weatherLoading').classList.add('show');
+  document.getElementById('weatherResult').style.display = 'none';
+  document.getElementById('weatherError').style.display  = 'none';
+
+  try {
+    const resp = await fetch(`/api/weather?city=${encodeURIComponent(city)}`);
+    const data = await resp.json();
+    document.getElementById('weatherLoading').classList.remove('show');
+
+    if (data.error) {
+      showError(data.error);
+      return;
+    }
+    fillWeatherUI(data);
+    document.getElementById('weatherResult').style.display = 'block';
+  } catch(e) {
+    document.getElementById('weatherLoading').classList.remove('show');
+    showError(isHindi ? 'कनेक्शन त्रुटि' : 'Connection error. Please try again.');
+  }
+}
+
+// ── Show error ────────────────────────────────────
+function showError(msg) {
+  const box = document.getElementById('weatherError');
+  box.style.display = 'block';
+  box.innerHTML = `<p style="color:#856404; font-weight:600;">⚠️ ${msg}</p>
+    <p style="font-size:0.85rem; color:#6c5700; margin-top:6px;">
+      ${isHindi
+        ? 'छोटे गांवों के लिए नजदीकी जिले या बड़े शहर का नाम आज़माएं।'
+        : 'For small villages, try the nearest district or city name.'}
+    </p>`;
+}
+
+// ── Fill all UI elements ──────────────────────────
+function fillWeatherUI(data) {
+  const dayNames = isHindi
+    ? ['रवि','सोम','मंगल','बुध','गुरु','शुक्र','शनि']
+    : ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+  const iconMap = {
+    '01d':'☀️','01n':'🌙','02d':'⛅','02n':'⛅','03d':'☁️','03n':'☁️',
+    '04d':'☁️','04n':'☁️','09d':'🌧️','09n':'🌧️','10d':'🌦️','10n':'🌦️',
+    '11d':'⛈️','11n':'⛈️','13d':'❄️','13n':'❄️','50d':'🌫️','50n':'🌫️'
+  };
+
+  // Current weather
+  document.getElementById('wCity').textContent =
+    `${data.city}, ${data.country}`;
+  document.getElementById('wDesc').textContent = data.description;
+  document.getElementById('wDate').textContent = new Date().toLocaleDateString(
+    isHindi ? 'hi-IN' : 'en-IN',
+    { weekday:'long', year:'numeric', month:'long', day:'numeric' }
+  );
+  document.getElementById('wTemp').textContent     = `${data.temp}°C`;
+  document.getElementById('wFeels').textContent    =
+    isHindi ? `महसूस होता है ${data.feels_like}°C` : `Feels like ${data.feels_like}°C`;
+  document.getElementById('wMinMax').textContent   =
+    `↓${data.temp_min}° ↑${data.temp_max}°`;
+  document.getElementById('wHumidity').textContent = `${data.humidity}%`;
+  document.getElementById('wWind').textContent     =
+    `${(data.wind_speed * 3.6).toFixed(1)}`;
+  document.getElementById('wVisibility').textContent = `${data.visibility}`;
+  document.getElementById('wPressure').textContent   = `${data.pressure}`;
+  document.getElementById('wClouds').textContent     = `${data.clouds}%`;
+
+  const toTime = ts => new Date(ts * 1000).toLocaleTimeString('en-IN',
+    { hour:'2-digit', minute:'2-digit' });
+  document.getElementById('wSunrise').textContent = toTime(data.sunrise);
+  document.getElementById('wSunset').textContent  = toTime(data.sunset);
+
+  // 5-day forecast
+  const fg = document.getElementById('forecastGrid');
+  fg.innerHTML = '';
+  data.forecast.forEach(day => {
+    const d    = new Date(day.date);
+    const icon = iconMap[day.icon] || '🌤️';
+    fg.innerHTML += `
+      <div style="background:linear-gradient(135deg,#f0faf4,#e8f5e9);
+                  border-radius:12px; padding:1rem; text-align:center;
+                  border:1px solid var(--green-pale); transition:transform 0.2s;"
+           onmouseover="this.style.transform='translateY(-4px)'"
+           onmouseout="this.style.transform='translateY(0)'">
+        <div style="font-size:0.8rem;font-weight:700;color:var(--text-mid);margin-bottom:6px;">
+          ${dayNames[d.getDay()]}
+        </div>
+        <div style="font-size:2rem;margin-bottom:6px;">${icon}</div>
+        <div style="font-size:0.75rem;color:var(--text-light);margin-bottom:8px;
+                    text-transform:capitalize;">${day.description}</div>
+        <div style="display:flex;justify-content:center;gap:8px;">
+          <span style="font-size:0.9rem;font-weight:800;color:var(--green-dark);">
+            ${Math.round(day.temp_max)}°
+          </span>
+          <span style="font-size:0.9rem;color:var(--text-light);">
+            ${Math.round(day.temp_min)}°
+          </span>
+        </div>
+        <div style="font-size:0.75rem;color:#48cae4;margin-top:4px;">
+          💧${day.humidity}%
+        </div>
+      </div>`;
+  });
+
+  // Farming advice
+  const adviceList = getFarmingAdvice(data);
+  document.getElementById('farmingAdvice').innerHTML = adviceList.map(a => `
+    <div style="background:${a.bg};border-radius:12px;padding:1rem;
+                border-left:4px solid ${a.color};">
+      <div style="font-size:1.3rem;margin-bottom:6px;">${a.icon}</div>
+      <div style="font-size:0.85rem;font-weight:700;color:var(--green-dark);
+                  margin-bottom:4px;">${a.title}</div>
+      <div style="font-size:0.8rem;color:var(--text-mid);line-height:1.5;">${a.msg}</div>
+    </div>`).join('');
+}
+
+// ── Farming advice logic ──────────────────────────
+function getFarmingAdvice(d) {
+  const hi = isHindi;
+  const advice = [];
+
+  if (d.humidity > 80)
+    advice.push({ icon:'🍄', color:'#e74c3c', bg:'#fdecea',
+      title: hi ? 'फंगल खतरा'    : 'Fungal Risk',
+      msg:   hi ? 'अधिक नमी से फंगल रोग का खतरा। फफूंदनाशक का प्रयोग करें।'
+                : 'High humidity increases fungal disease risk. Apply fungicide preventively.' });
+  else
+    advice.push({ icon:'✅', color:'#27ae60', bg:'#eafaf1',
+      title: hi ? 'नमी सामान्य'  : 'Humidity Normal',
+      msg:   hi ? 'नमी का स्तर फसल के लिए अनुकूल है।'
+                : 'Humidity levels are suitable for most crops.' });
+
+  if (d.wind_speed * 3.6 > 30)
+    advice.push({ icon:'💨', color:'#f39c12', bg:'#fef9e7',
+      title: hi ? 'तेज हवा'      : 'High Winds',
+      msg:   hi ? 'तेज हवाओं से फसल को नुकसान हो सकता है।'
+                : 'Strong winds may damage crops. Support tall plants.' });
+  else
+    advice.push({ icon:'🌬️', color:'#3498db', bg:'#eaf4fb',
+      title: hi ? 'हवा अनुकूल'   : 'Wind Favorable',
+      msg:   hi ? 'हवा की गति सामान्य है, परागण के लिए अच्छी।'
+                : 'Wind speed is normal, good for pollination.' });
+
+  if (d.temp > 38)
+    advice.push({ icon:'🔥', color:'#e74c3c', bg:'#fdecea',
+      title: hi ? 'अत्यधिक गर्मी': 'Extreme Heat',
+      msg:   hi ? 'बहुत गर्म मौसम। सुबह या शाम को सिंचाई करें।'
+                : 'Very hot weather. Irrigate in morning or evening.' });
+  else if (d.temp < 10)
+    advice.push({ icon:'❄️', color:'#3498db', bg:'#eaf4fb',
+      title: hi ? 'ठंड का खतरा' : 'Cold Risk',
+      msg:   hi ? 'पाले से फसल बचाएं। ढकने की व्यवस्था करें।'
+                : 'Protect crops from frost. Cover sensitive plants.' });
+  else
+    advice.push({ icon:'🌡️', color:'#27ae60', bg:'#eafaf1',
+      title: hi ? 'तापमान सामान्य': 'Temperature Normal',
+      msg:   hi ? 'तापमान अधिकांश फसलों के लिए उपयुक्त है।'
+                : 'Temperature is suitable for most crop growth.' });
+
+  if (d.clouds > 70)
+    advice.push({ icon:'☁️', color:'#7f8c8d', bg:'#f2f3f4',
+      title: hi ? 'बादल छाए हैं' : 'Overcast Sky',
+      msg:   hi ? 'सूरज की रोशनी कम है। सिंचाई कम करें।'
+                : 'Low sunlight today. Reduce irrigation accordingly.' });
+  else
+    advice.push({ icon:'☀️', color:'#f39c12', bg:'#fef9e7',
+      title: hi ? 'धूप अच्छी है' : 'Good Sunshine',
+      msg:   hi ? 'आज धूप अच्छी है। फसल की वृद्धि के लिए उत्तम।'
+                : 'Good sunlight today. Ideal for crop growth and drying.' });
+
+  return advice;
+}
+
+// ── Load on page start ────────────────────────────
+window.onload = () => fetchWeather();
+</script>
+{% endblock %}

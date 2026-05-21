@@ -1,0 +1,405 @@
+{% extends "base.html" %}
+{% block title %}Crop Suggestion{% endblock %}
+
+{% block content %}
+
+<div class="page-hero">
+  <div class="page-hero-content">
+    <span class="page-hero-icon">🌱</span>
+    <h1>{% if session.get('lang')=='hi' %}फसल सुझाव{% else %}Crop Suggestion{% endif %}</h1>
+    <p>{% if session.get('lang')=='hi' %}मिट्टी और जलवायु के आधार पर AI फसल सिफारिश
+       {% else %}AI-powered crop recommendation based on soil & climate data{% endif %}</p>
+  </div>
+</div>
+
+<div class="section" style="max-width:1000px;">
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:2rem;">
+
+    <!-- Input Form -->
+    <div>
+      <div class="card">
+        <div class="card-header">
+          🧪 {% if session.get('lang')=='hi' %}मिट्टी की जानकारी दर्ज करें{% else %}Enter Soil & Climate Data{% endif %}
+        </div>
+        <div class="card-body">
+
+          <!-- Soil NPK -->
+          <p style="font-size:0.8rem; font-weight:800; color:var(--green-mid);
+                    letter-spacing:1px; text-transform:uppercase; margin-bottom:12px;">
+            {% if session.get('lang')=='hi' %}मिट्टी NPK (kg/ha){% else %}Soil NPK (kg/ha){% endif %}
+          </p>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:1.2rem;">
+            <div>
+              <label class="form-label">
+                {% if session.get('lang')=='hi' %}नाइट्रोजन (N){% else %}Nitrogen (N){% endif %}
+              </label>
+              <input type="number" id="nitrogen" class="form-control"
+                     placeholder="0-200" min="0" max="200" value="90"/>
+              <p style="font-size:0.72rem; color:var(--text-light); margin-top:3px;">kg/ha</p>
+            </div>
+            <div>
+              <label class="form-label">
+                {% if session.get('lang')=='hi' %}फास्फोरस (P){% else %}Phosphorus (P){% endif %}
+              </label>
+              <input type="number" id="phosphorus" class="form-control"
+                     placeholder="0-200" min="0" max="200" value="42"/>
+              <p style="font-size:0.72rem; color:var(--text-light); margin-top:3px;">kg/ha</p>
+            </div>
+            <div>
+              <label class="form-label">
+                {% if session.get('lang')=='hi' %}पोटाश (K){% else %}Potassium (K){% endif %}
+              </label>
+              <input type="number" id="potassium" class="form-control"
+                     placeholder="0-200" min="0" max="200" value="43"/>
+              <p style="font-size:0.72rem; color:var(--text-light); margin-top:3px;">kg/ha</p>
+            </div>
+          </div>
+
+          <!-- Climate -->
+          <p style="font-size:0.8rem; font-weight:800; color:var(--green-mid);
+                    letter-spacing:1px; text-transform:uppercase; margin-bottom:12px;">
+            {% if session.get('lang')=='hi' %}जलवायु जानकारी{% else %}Climate Data{% endif %}
+          </p>
+
+          <div class="form-group">
+            <label class="form-label">
+              🌡️ {% if session.get('lang')=='hi' %}तापमान (°C){% else %}Temperature (°C){% endif %}
+            </label>
+            <input type="range" id="temperature" min="5" max="50" value="25"
+                   oninput="document.getElementById('tempVal').textContent=this.value+'°C'"
+                   style="width:100%; accent-color:var(--green-mid);">
+            <div style="display:flex; justify-content:space-between;">
+              <span style="font-size:0.75rem; color:var(--text-light);">5°C</span>
+              <span id="tempVal" style="font-size:0.9rem; font-weight:800;
+                    color:var(--green-dark);">25°C</span>
+              <span style="font-size:0.75rem; color:var(--text-light);">50°C</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">
+              💧 {% if session.get('lang')=='hi' %}नमी (%){% else %}Humidity (%){% endif %}
+            </label>
+            <input type="range" id="humidity" min="10" max="100" value="70"
+                   oninput="document.getElementById('humVal').textContent=this.value+'%'"
+                   style="width:100%; accent-color:var(--green-mid);">
+            <div style="display:flex; justify-content:space-between;">
+              <span style="font-size:0.75rem; color:var(--text-light);">10%</span>
+              <span id="humVal" style="font-size:0.9rem; font-weight:800;
+                    color:var(--green-dark);">70%</span>
+              <span style="font-size:0.75rem; color:var(--text-light);">100%</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">
+              🧫 {% if session.get('lang')=='hi' %}मिट्टी pH{% else %}Soil pH{% endif %}
+            </label>
+            <input type="range" id="ph" min="3" max="10" step="0.1" value="6.5"
+                   oninput="document.getElementById('phVal').textContent=parseFloat(this.value).toFixed(1)"
+                   style="width:100%; accent-color:var(--green-mid);">
+            <div style="display:flex; justify-content:space-between;">
+              <span style="font-size:0.75rem; color:var(--text-light);">3 (Acidic)</span>
+              <span id="phVal" style="font-size:0.9rem; font-weight:800;
+                    color:var(--green-dark);">6.5</span>
+              <span style="font-size:0.75rem; color:var(--text-light);">10 (Alkaline)</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">
+              🌧️ {% if session.get('lang')=='hi' %}वार्षिक वर्षा (mm){% else %}Annual Rainfall (mm){% endif %}
+            </label>
+            <input type="number" id="rainfall" class="form-control"
+                   placeholder="0-500" min="0" max="500" value="200"/>
+          </div>
+
+          <!-- Preset Buttons -->
+          <p style="font-size:0.8rem; font-weight:700; color:var(--text-light); margin-bottom:8px;">
+            {% if session.get('lang')=='hi' %}त्वरित प्रीसेट:{% else %}Quick Presets:{% endif %}
+          </p>
+          <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:1.5rem;">
+            <button onclick="setPreset('alluvial')"
+                    style="padding:5px 12px; background:#e8f5e9; color:var(--green-dark);
+                           border:1px solid var(--green-light); border-radius:16px;
+                           font-size:0.78rem; font-weight:700; cursor:pointer;">
+              🟤 {% if session.get('lang')=='hi' %}जलोढ़ मिट्टी{% else %}Alluvial{% endif %}
+            </button>
+            <button onclick="setPreset('black')"
+                    style="padding:5px 12px; background:#e8f5e9; color:var(--green-dark);
+                           border:1px solid var(--green-light); border-radius:16px;
+                           font-size:0.78rem; font-weight:700; cursor:pointer;">
+              ⚫ {% if session.get('lang')=='hi' %}काली मिट्टी{% else %}Black Soil{% endif %}
+            </button>
+            <button onclick="setPreset('red')"
+                    style="padding:5px 12px; background:#e8f5e9; color:var(--green-dark);
+                           border:1px solid var(--green-light); border-radius:16px;
+                           font-size:0.78rem; font-weight:700; cursor:pointer;">
+              🔴 {% if session.get('lang')=='hi' %}लाल मिट्टी{% else %}Red Soil{% endif %}
+            </button>
+            <button onclick="setPreset('sandy')"
+                    style="padding:5px 12px; background:#e8f5e9; color:var(--green-dark);
+                           border:1px solid var(--green-light); border-radius:16px;
+                           font-size:0.78rem; font-weight:700; cursor:pointer;">
+              🏜️ {% if session.get('lang')=='hi' %}बलुई मिट्टी{% else %}Sandy Soil{% endif %}
+            </button>
+          </div>
+
+          <button onclick="getCropSuggestion()" class="btn-green" style="font-size:1rem; padding:14px;">
+            🌱 {% if session.get('lang')=='hi' %}फसल सुझाव पाएं{% else %}Get Crop Suggestion{% endif %}
+          </button>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Results -->
+    <div>
+      <!-- Loading -->
+      <div class="loading-spinner" id="cropLoading">
+        <div class="spinner"></div>
+        <p style="color:var(--text-light);">
+          {% if session.get('lang')=='hi' %}AI विश्लेषण कर रहा है...{% else %}AI is analyzing your soil...{% endif %}
+        </p>
+      </div>
+
+      <!-- Error -->
+      <div id="cropError" style="display:none; background:#fff3cd;
+           border:1.5px solid #ffc107; border-radius:var(--radius-md); padding:1.2rem;">
+      </div>
+
+      <!-- Default state -->
+      <div id="cropDefault"
+           style="background:white; border-radius:var(--radius-lg);
+                  border:2px dashed var(--green-pale); padding:3rem;
+                  text-align:center; color:var(--text-light);">
+        <div style="font-size:3rem; margin-bottom:1rem;">🌱</div>
+        <p style="font-weight:700; font-size:1rem; color:var(--green-dark);">
+          {% if session.get('lang')=='hi' %}मिट्टी की जानकारी भरें और सुझाव पाएं
+          {% else %}Fill soil data and get AI crop recommendations{% endif %}
+        </p>
+        <p style="font-size:0.85rem; margin-top:8px;">
+          {% if session.get('lang')=='hi' %}या ऊपर दिए गए प्रीसेट बटन का उपयोग करें
+          {% else %}Or use the preset buttons above for quick test{% endif %}
+        </p>
+      </div>
+
+      <!-- Results -->
+      <div id="cropResult" style="display:none;">
+
+        <!-- Top Crop -->
+        <div id="topCropCard" style="margin-bottom:1.5rem;"></div>
+
+        <!-- Other Suggestions -->
+        <div id="otherCrops" style="margin-bottom:1.5rem;"></div>
+
+        <!-- Soil Analysis -->
+        <div class="card">
+          <div class="card-header">
+            🧪 {% if session.get('lang')=='hi' %}मिट्टी विश्लेषण{% else %}Soil Analysis{% endif %}
+          </div>
+          <div class="card-body" style="padding:1rem;">
+            <div id="soilAnalysis"
+                 style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const isHindi = {{ 'true' if session.get('lang')=='hi' else 'false' }};
+
+// Soil presets
+const presets = {
+  alluvial: { N:90,  P:42, K:43, temp:26, hum:82, ph:6.5, rain:203 },
+  black:    { N:70,  P:62, K:80, temp:28, hum:65, ph:7.8, rain:58  },
+  red:      { N:35,  P:45, K:42, temp:30, hum:70, ph:6.0, rain:100 },
+  sandy:    { N:20,  P:20, K:25, temp:38, hum:55, ph:7.5, rain:51  },
+};
+
+function setPreset(type) {
+  const p = presets[type];
+  document.getElementById('nitrogen').value    = p.N;
+  document.getElementById('phosphorus').value  = p.P;
+  document.getElementById('potassium').value   = p.K;
+  document.getElementById('temperature').value = p.temp;
+  document.getElementById('humidity').value    = p.hum;
+  document.getElementById('ph').value          = p.ph;
+  document.getElementById('rainfall').value    = p.rain;
+  document.getElementById('tempVal').textContent = p.temp + '°C';
+  document.getElementById('humVal').textContent  = p.hum  + '%';
+  document.getElementById('phVal').textContent   = p.ph;
+}
+
+async function getCropSuggestion() {
+  const payload = {
+    nitrogen    : parseFloat(document.getElementById('nitrogen').value)    || 0,
+    phosphorus  : parseFloat(document.getElementById('phosphorus').value)  || 0,
+    potassium   : parseFloat(document.getElementById('potassium').value)   || 0,
+    temperature : parseFloat(document.getElementById('temperature').value) || 25,
+    humidity    : parseFloat(document.getElementById('humidity').value)    || 70,
+    ph          : parseFloat(document.getElementById('ph').value)          || 6.5,
+    rainfall    : parseFloat(document.getElementById('rainfall').value)    || 100,
+  };
+
+  document.getElementById('cropLoading').classList.add('show');
+  document.getElementById('cropResult').style.display  = 'none';
+  document.getElementById('cropDefault').style.display = 'none';
+  document.getElementById('cropError').style.display   = 'none';
+
+  try {
+    const resp = await fetch('/api/crop-suggest', {
+      method : 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body   : JSON.stringify(payload),
+    });
+
+    const data = await resp.json();
+    document.getElementById('cropLoading').classList.remove('show');
+
+    if (data.error) {
+      document.getElementById('cropError').style.display = 'block';
+      document.getElementById('cropError').innerHTML =
+        `<p style="color:#856404; font-weight:600;">⚠️ ${data.error}</p>`;
+      return;
+    }
+
+    renderResults(data);
+    document.getElementById('cropResult').style.display = 'block';
+
+  } catch(e) {
+    document.getElementById('cropLoading').classList.remove('show');
+    document.getElementById('cropError').style.display = 'block';
+    document.getElementById('cropError').innerHTML =
+      `<p style="color:#856404;">❌ Connection error. Please try again.</p>`;
+  }
+}
+
+function renderResults(data) {
+  const crops = data.top_crops;
+  const hi    = isHindi;
+
+  // Top crop (rank 1)
+  const top = crops[0];
+  document.getElementById('topCropCard').innerHTML = `
+    <div style="background:linear-gradient(135deg,var(--green-dark),var(--green-mid));
+                border-radius:var(--radius-lg); padding:2rem; color:white; position:relative; overflow:hidden;">
+      <div style="position:absolute; top:-10px; right:-10px; font-size:6rem; opacity:0.12;">
+        ${top.emoji}
+      </div>
+      <div style="display:flex; align-items:center; gap:12px; margin-bottom:1rem;">
+        <span style="font-size:3rem;">${top.emoji}</span>
+        <div>
+          <div style="font-size:0.75rem; opacity:0.7; text-transform:uppercase; letter-spacing:1px;">
+            #1 ${hi ? 'सर्वश्रेष्ठ फसल' : 'Best Crop'}
+          </div>
+          <div style="font-family:'Baloo 2',cursive; font-size:1.8rem; font-weight:800;">
+            ${hi ? top.crop_hi : top.crop.charAt(0).toUpperCase()+top.crop.slice(1)}
+          </div>
+        </div>
+        <div style="margin-left:auto; text-align:right;">
+          <div style="font-size:2rem; font-weight:800; color:var(--gold);">${top.confidence}%</div>
+          <div style="font-size:0.75rem; opacity:0.7;">${hi ? 'आत्मविश्वास' : 'Confidence'}</div>
+        </div>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:1rem;">
+        <div style="background:rgba(255,255,255,0.12); border-radius:10px; padding:10px;">
+          <div style="font-size:0.72rem; opacity:0.7;">📅 ${hi?'मौसम':'Season'}</div>
+          <div style="font-size:0.85rem; font-weight:700;">${hi?top.season_hi:top.season}</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.12); border-radius:10px; padding:10px;">
+          <div style="font-size:0.72rem; opacity:0.7;">⏱️ ${hi?'अवधि':'Duration'}</div>
+          <div style="font-size:0.85rem; font-weight:700;">${top.duration}</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.12); border-radius:10px; padding:10px;">
+          <div style="font-size:0.72rem; opacity:0.7;">💧 ${hi?'पानी':'Water'}</div>
+          <div style="font-size:0.85rem; font-weight:700;">${top.water}</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.12); border-radius:10px; padding:10px;">
+          <div style="font-size:0.72rem; opacity:0.7;">💰 MSP</div>
+          <div style="font-size:0.85rem; font-weight:700;">${top.msp}</div>
+        </div>
+      </div>
+      <div style="background:rgba(255,255,255,0.1); border-radius:10px; padding:12px;">
+        <div style="font-size:0.72rem; opacity:0.7; margin-bottom:4px;">
+          💡 ${hi?'सुझाव':'Tip'}
+        </div>
+        <div style="font-size:0.82rem; line-height:1.5;">
+          ${hi ? top.tips_hi : top.tips}
+        </div>
+      </div>
+      <div style="margin-top:10px; font-size:0.78rem; opacity:0.7;">
+        📍 ${hi?'प्रमुख राज्य':'Major States'}: ${top.states}
+      </div>
+    </div>`;
+
+  // Other crops (rank 2 & 3)
+  const others = crops.slice(1);
+  document.getElementById('otherCrops').innerHTML = `
+    <p style="font-size:0.82rem; font-weight:800; color:var(--text-light);
+              text-transform:uppercase; letter-spacing:1px; margin-bottom:10px;">
+      ${hi ? 'अन्य विकल्प' : 'Other Options'}
+    </p>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+      ${others.map(c => `
+        <div style="background:white; border-radius:var(--radius-md); padding:1.2rem;
+                    border:1.5px solid var(--green-pale); transition:all 0.2s;"
+             onmouseover="this.style.borderColor='var(--green-light)';this.style.transform='translateY(-2px)'"
+             onmouseout="this.style.borderColor='var(--green-pale)';this.style.transform='translateY(0)'">
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+            <span style="font-size:1.8rem;">${c.emoji}</span>
+            <div>
+              <div style="font-family:'Baloo 2',cursive; font-weight:800; color:var(--green-dark);">
+                ${hi ? c.crop_hi : c.crop.charAt(0).toUpperCase()+c.crop.slice(1)}
+              </div>
+              <div style="font-size:0.8rem; color:var(--green-mid); font-weight:700;">
+                ${c.confidence}% ${hi?'मिलान':'match'}
+              </div>
+            </div>
+          </div>
+          <div style="font-size:0.78rem; color:var(--text-light);">
+            📅 ${hi?c.season_hi:c.season}
+          </div>
+          <div style="font-size:0.78rem; color:var(--text-light); margin-top:3px;">
+            💰 ${c.msp}
+          </div>
+          <div style="margin-top:8px;">
+            ${c.profit}
+          </div>
+        </div>`).join('')}
+    </div>`;
+
+  // Soil analysis
+  const sa = data.soil_analysis;
+  document.getElementById('soilAnalysis').innerHTML = sa.map(a => `
+    <div style="background:${a.type==='good'?'#eafaf1':'#fff8e1'};
+                border-radius:10px; padding:10px;
+                border-left:3px solid ${a.type==='good'?'#27ae60':'#f39c12'};">
+      <div style="font-size:1rem; margin-bottom:4px;">${a.icon}</div>
+      <div style="font-size:0.82rem; font-weight:800; color:var(--green-dark);">
+        ${hi ? a.label_hi : a.label}
+      </div>
+      <div style="font-size:0.78rem; color:var(--text-mid); margin-top:3px; line-height:1.4;">
+        ${hi ? a.msg_hi : a.msg}
+      </div>
+    </div>`).join('');
+}
+
+// Make responsive on small screens
+window.addEventListener('resize', () => {
+  const grid = document.querySelector('.section > div');
+  if (grid) {
+    grid.style.gridTemplateColumns = window.innerWidth < 768 ? '1fr' : '1fr 1fr';
+  }
+});
+</script>
+{% endblock %}
