@@ -138,13 +138,14 @@ python app.py
 ![Weather](screenshots/weather3.png)
 ---
 
-### 🌱 Crop Recommendation
-![Crop Recommendation](screenshots/disease2.png)
+<!-- ### 🌱 Crop Recommendation
+![Crop Recommendation](screenshots/disease2.png) -->
 
 ---
 
 ### 🦠 Disease Detection
 ![Disease Detection](screenshots/disease.png)
+![Crop Recommendation](screenshots/disease2.png)
 
 ---
 
