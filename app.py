@@ -247,9 +247,17 @@ def create_app():
     def api_crop_suggest():
         from routes.crop_routes import suggest_crop
         return suggest_crop()
+    
+    @app.errorhandler(500)
+    def internal_error(error):
+        return f"<h1>500 Error</h1><p>{str(error)}</p>", 500
 
+    @app.errorhandler(404)
+    def not_found(error):
+        return redirect(url_for('index'))
+  
     return app
-
+    
 
 app = create_app()
 
