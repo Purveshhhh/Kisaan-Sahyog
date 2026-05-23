@@ -253,8 +253,15 @@ def create_app():
 
 app = create_app()
 
+# Fix PostgreSQL URL for Render
+import re
+db_url = os.environ.get('DATABASE_URL', '')
+if db_url.startswith('postgres://'):
+    os.environ['DATABASE_URL'] = db_url.replace('postgres://', 'postgresql://', 1)
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL']
+
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
         print("✅ Database tables created.")
-    app.run(debug=True, host='0.0.0.0', port=5000, threaded=True)
+    app.run(debug=False, host='0.0.0.0', port=5000, threaded=True)

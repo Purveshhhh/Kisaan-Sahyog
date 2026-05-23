@@ -1,26 +1,56 @@
 # Virtual Environment
 venv/
+env/
+.venv/
 
 # Python cache
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+.Python
 
-# Environment variables
-.env
-
-# VS Code settings
-.vscode/
-
-# Database files
+# Flask instance folder & database
+instance/
 *.db
+*.sqlite
+*.sqlite3
+
+# Environment variables (NEVER upload this!)
+.env
+.env.local
+.env.production
+
+# Uploads folder (user uploaded images)
+static/uploads/*
+!static/uploads/.gitkeep
+
+# ML Models (too large for GitHub)
+ml/disease_model.h5
+ml/disease_model_best.h5
+ml/PlantVillage/
+ml/*.h5
+
+# Training artifacts
+ml/training_history.png
+
+# Screenshots
+screenshots/
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# Windows
+Thumbs.db
+desktop.ini
+$RECYCLE.BIN/
 
 # Logs
 *.log
+logs/
 
-# Uploads
-static/uploads/
-
-# Model files (optional if large)
-*.h5
-*.pt
-*.pth
+# Distribution
+dist/
+build/
+*.egg-info/
