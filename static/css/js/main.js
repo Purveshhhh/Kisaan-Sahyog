@@ -7,9 +7,11 @@ function toggleMenu() {
 // ── Auto-dismiss flash messages ──────────
 setTimeout(() => {
   const fc = document.getElementById('flashContainer');
-  if (fc) fc.style.opacity === undefined
-    ? fc.remove()
-    : fc.animate([{opacity:1},{opacity:0}],{duration:500}).onfinish = () => fc.remove();
+  if (fc) {
+    fc.animate
+      ? fc.animate([{opacity:1},{opacity:0}],{duration:500}).onfinish = () => fc.remove()
+      : fc.remove();
+  }
 }, 4000);
 
 // ── Navbar scroll shadow ─────────────────

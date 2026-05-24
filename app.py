@@ -31,6 +31,7 @@ def create_app():
     def make_session_permanent():
         session.permanent = True
 
+
     # ── Error Handlers ─────────────────────────────
     @app.errorhandler(404)
     def not_found(e):
@@ -38,6 +39,7 @@ def create_app():
 
     @app.errorhandler(500)
     def server_error(e):
+        db.session.rollback()
         return render_template('500.html', error=str(e)), 500
 
     # ── Auth Routes ────────────────────────────────

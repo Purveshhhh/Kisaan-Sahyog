@@ -131,19 +131,41 @@ def detect_with_gemini(img_bytes):
         img.save(img_byte_arr, format='JPEG')
         img_bytes_out = img_byte_arr.getvalue()
 
-        response = client.models.generate_content(
-            model    = 'gemini-2.0-flash',
-            contents = [
-                types.Part.from_bytes(
-                    data      = img_bytes_out,
-                    mime_type = 'image/jpeg'
-                ),
-                prompt
-            ]
-        )
+        # Try models in order until one works
+        models_to_try = [
+            'gemini-1.5-flash-8b',
+            'gemini-1.5-flash',
+            'gemini-2.0-flash',
+        ]
+
+        response = None
+        last_error = None
+
+        for model_name in models_to_try:
+            try:
+                print(f"⏳ Trying Gemini model: {model_name}")
+                response = client.models.generate_content(
+                    model    = model_name,
+                    contents = [
+                        types.Part.from_bytes(
+                            data      = img_bytes_out,
+                            mime_type = 'image/jpeg'
+                        ),
+                        prompt
+                    ]
+                )
+                print(f"✅ Gemini model {model_name} succeeded.")
+                break
+            except Exception as e:
+                print(f"⚠️ Model {model_name} failed: {e}")
+                last_error = e
+                continue
+
+        if response is None:
+            raise last_error
 
         text = response.text.strip()
-        print(f"✅ Gemini response received: {text[:200]}")
+        print(f"✅ Gemini response: {text[:200]}")
 
         if '```json' in text:
             text = text.split('```json')[1].split('```')[0].strip()
@@ -178,7 +200,9 @@ def detect_with_gemini(img_bytes):
 
     except Exception as e:
         print(f"Gemini error: {type(e).__name__}: {e}")
-        return jsonify({'error': f'Analysis error: {str(e)}'}), 500
+        return jsonify({
+            'error': f'Disease analysis failed. Please try again later. ({type(e).__name__})'
+        }), 500
 
 
 DISEASE_INFO = {
@@ -218,7 +242,7 @@ DISEASE_INFO = {
         'prevention': ['Improve air circulation', 'Remove infected leaves'],
     },
     'Tomato_mosaic_virus': {
-        'chemical'  : ['No chemical cure available', 'Remove infected plants immediately'],
+        'chemical'  : ['No chemical cure — remove infected plants immediately'],
         'biological': ['Control aphid vectors with neem oil', 'Use virus-free seedlings'],
         'prevention': ['Use resistant varieties', 'Control insect vectors', 'Sanitize tools'],
     },

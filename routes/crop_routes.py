@@ -1,3 +1,5 @@
+import warnings
+warnings.filterwarnings('ignore', category=UserWarning)
 from flask import request, jsonify
 import pickle
 import numpy as np
