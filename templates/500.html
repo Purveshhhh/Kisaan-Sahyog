@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Server Error{% endblock %}
+{% block content %}
+<div style="text-align:center; padding:5rem 2rem;">
+  <div style="font-size:4rem; margin-bottom:1rem;">⚠️</div>
+  <h1 style="font-family:'Baloo 2',cursive; color:var(--green-dark); margin-bottom:1rem;">
+    Something went wrong
+  </h1>
+  <p style="color:var(--text-light); margin-bottom:2rem;">
+    Our server encountered an error. Please try again.
+  </p>
+  <a href="/" class="btn-primary">🏠 Go Home</a>
+</div>
+{% endblock %}
