@@ -133,10 +133,10 @@ def detect_with_gemini(img_bytes):
 
         # Try models in order until one works
         models_to_try = [
-            'gemini-1.5-flash-8b',
-            'gemini-1.5-flash',
-            'gemini-2.0-flash',
-        ]
+    'gemini-2.0-flash-lite',
+    'gemini-2.0-flash',
+    'gemini-1.5-flash',
+]
 
         response = None
         last_error = None
