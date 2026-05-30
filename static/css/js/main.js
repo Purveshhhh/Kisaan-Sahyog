@@ -8,9 +8,9 @@ function toggleMenu() {
 setTimeout(() => {
   const fc = document.getElementById('flashContainer');
   if (fc) {
-    fc.animate
-      ? fc.animate([{opacity:1},{opacity:0}],{duration:500}).onfinish = () => fc.remove()
-      : fc.remove();
+    try {
+      fc.animate([{opacity:1},{opacity:0}],{duration:500}).onfinish = () => fc.remove();
+    } catch(e) { fc.remove(); }
   }
 }, 4000);
 

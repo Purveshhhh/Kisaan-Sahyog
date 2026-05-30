@@ -25,11 +25,10 @@ instance/
 static/uploads/*
 !static/uploads/.gitkeep
 
-# ML Models (too large for GitHub)
-ml/disease_model.h5
+
+# ML Models
 ml/disease_model_best.h5
 ml/PlantVillage/
-ml/*.h5
 
 # Training artifacts
 ml/training_history.png
