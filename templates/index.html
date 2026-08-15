@@ -5,10 +5,22 @@
 
 <!-- ── HERO ─────────────────────────────────────── -->
 <section class="hero">
-  <div class="hero-bg"></div>
-  <div class="hero-particles" id="particles"></div>
 
-  <div class="hero-content">
+  <!-- Video Background -->
+  <video autoplay muted loop playsinline
+         style="position:absolute; top:0; left:0; width:100%; height:100%;
+                object-fit:cover; z-index:0; opacity:0.25;
+                pointer-events:none; filter:brightness(0.6) saturate(1.3);">
+    <source src="https://videos.pexels.com/video-files/4153756/4153756-hd_1280_720_25fps.mp4"
+            type="video/mp4"/>
+    <source src="{{ url_for('static', filename='videos/hero.mp4') }}"
+            type="video/mp4"/>
+  </video>
+
+  <div class="hero-bg" style="z-index:1;"></div>
+  <div class="hero-particles" id="particles" style="z-index:1;"></div>
+
+  <div class="hero-content" style="position:relative; z-index:2;">
     <!-- Left Side -->
     <div class="hero-left">
       <div class="hero-badge">🇮🇳
